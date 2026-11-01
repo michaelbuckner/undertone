@@ -57,6 +57,12 @@ MainComponent::MainComponent() {
     clockHint.setTooltip("The MIDI buffer adds a fixed delay, separate from the audio device latency. Reduce the audio buffer for a shorter delay. Late counts events arriving more than one sample behind their render interval.");
     for(auto* b:{&play,&stop,&panic,&generateButton,&lockAll,&undo,&save,&load,&audio,&refreshMidi,&recover})addAndMakeVisible(b);
     for(auto* button:{&performanceTab,&soundTab,&varyMotif,&newFigure,&storeA,&storeB,&recallA,&recallB,&keepMoment,&recordAudio,&exportMidi})addAndMakeVisible(button);
+    const char* editorPages[]{"Tone","Envelope","Effects","Layers","Percussion","Phrase & MIDI"};
+    for(int i=0;i<6;++i){auto& button=soundPages[i];addChildComponent(button);button.setButtonText(editorPages[i]);
+        button.setTitle(juce::String("Sound section: ")+editorPages[i]);button.getProperties().set("tab",true);
+        button.onClick=[this,i]{selectSoundPage(i);};}
+    addChildComponent(soundPageTitle);addChildComponent(soundPageHint);soundPageTitle.setFont(font(20,true));
+    soundPageTitle.setColour(juce::Label::textColourId,ink);soundPageHint.setFont(font(12));
     for(auto* control:{&phrasing,&sceneCycle,&sceneVariations})addAndMakeVisible(control);
     for(auto* box:{&motifMode,&swapStyle,&sceneInterval,&exportBars})addAndMakeVisible(box);
     motifMode.addItemList({"Hold motif","Vary motif","New motifs"},1);motifMode.setTitle("Automatic motif behavior");
@@ -99,11 +105,11 @@ MainComponent::MainComponent() {
     for(int i=0;i<9;++i)tonePreset.addItem(toneName(i),i+1);
     evolveTarget.addItemList({"Chords + tone","Chords only","Tone only"},1);
     for(int i=0;i<6;++i)evolvePace.addItem(juce::String(1<<i)+((i==0)?" bar":" bars"),i+1);
-    const char* soundCaptions[]{"SYNTH ENGINE","TONE PATCH / KEEPS YOUR CHORDS","EVOLVE TARGET","EVOLVE INTERVAL / TONE CYCLE"};
+    const char* soundCaptions[]{"PAD ENGINE","PAD TONE / KEEPS YOUR CHORDS","EVOLVE TARGET","EVOLVE INTERVAL"};
     for(int i=0;i<4;++i){soundLabels[i].setText(soundCaptions[i],juce::dontSendNotification);soundLabels[i].setFont(font(11,true));addAndMakeVisible(soundLabels[i]);}
     toneModel.setTitle("Synth engine");tonePreset.setTitle("Tone patch");evolveTarget.setTitle("Evolve target");evolvePace.setTitle("Evolve interval");
     addAndMakeVisible(evolutionHint);evolutionHint.setFont(font(11));evolutionHint.setName("Evolution status");
-    evolve.setTooltip("Evolve changes unlocked chords on a bar interval and/or slowly morphs tone. Configure target and interval below. Variation controls depth; zero disables change.");
+    evolve.setTooltip("Evolve changes unlocked chords on a bar interval and/or slowly morphs tone. Configure target, interval and Variation in Sound > Phrase & MIDI. Zero Variation disables change.");
     play.setColour(juce::TextButton::buttonColourId,accent);
     generateButton.setColour(juce::TextButton::textColourOffId,accent);
     const juce::StringArray keys{"C","Db","D","Eb","E","F","Gb","G","Ab","A","Bb","B"};key.addItemList(keys,1);
@@ -147,7 +153,7 @@ MainComponent::MainComponent() {
         control.setSliderStyle(juce::Slider::LinearHorizontal);control.setTextBoxStyle(juce::Slider::TextBoxRight,false,52,24);
         control.setName(percussionNames[i]);control.setTitle(percussionNames[i]);percussionLabels[i].setText(percussionNames[i],juce::dontSendNotification);addAndMakeVisible(percussionLabels[i]);
         control.onValueChange=[this]{if(!refreshing)changePercussion();};}
-    percussionEnabled.setTooltip("Optional dry thumps, rim clicks and noise ticks. Off leaves space for your Elektron drums. Level and pattern controls are below Arrangement.");
+    percussionEnabled.setTooltip("Optional dry thumps, rim clicks and noise ticks. Off leaves space for your Elektron drums. Find level and pattern controls in Sound > Percussion.");
     percussionControls[0].setRange(0,2,.01);percussionControls[0].setTooltip("Extended range: 1.0 is the previous maximum; 2.0 gives up to +6 dB before the master output limiter.");
     percussionEnabled.onClick=[this]{changePercussion();};newBeat.onClick=[this]{editing.percussion.seed=nextPercussionSeed(editing.percussion.seed);send(Action::percussion);notification="New offbeat pattern; main pulse and harmony retained.";};
     slots.addItemList({"2 chords","4 chords","8 chords"},1);bars.addItemList({"1 bar / chord","2 bars / chord","4 bars / chord"},1);
@@ -372,6 +378,7 @@ void MainComponent::showSession(const Session& s){
     for(size_t i=0;i<advanced.size();++i)advanced[i].setValue(extras[i],juce::dontSendNotification);
     for(int i=5;i<10;++i)advanced[i].setEnabled(p.model!=ToneModel::warm&&(p.model!=ToneModel::fm||(i!=6&&i!=9)));
     advanced[4].setEnabled(p.model==ToneModel::warm||p.model==ToneModel::ladder);
+    refreshSoundEditor();
     refreshing=false;
 }
 void MainComponent::updateMidiList(){
@@ -538,11 +545,12 @@ void MainComponent::paint(juce::Graphics& g){
         const int mixW=(getWidth()-72)/6;
         for(int i=1;i<6;++i){g.setColour(line.withAlpha(.6f));g.drawVerticalLine(36+i*mixW-12,486,526);}
     }else{
-        surface(20,404,w-40,190);surface(20,658,w-40,198);surface(20,865,w-40,84);
-        surface(20,949,w-40,165);surface(20,1118,w-40,122);surface(20,1252,w-40,148);
+        surface(20,400,174,340);surface(206,400,w-226,340);
+        g.setColour(muted);g.setFont(font(10,true));g.drawText("SOUND EDITOR",32,410,150,25,juce::Justification::centredLeft);
+        g.setColour(line);g.drawHorizontalLine(464,220,w-34);
     }
     g.setColour(line);g.drawHorizontalLine(getHeight()-53,24,w-24);
-    g.setColour(muted);g.setFont(font(9));g.drawText("UNDERTONE  /  0.9",getWidth()-150,getHeight()-33,125,15,juce::Justification::centredRight);
+    g.setColour(muted);g.setFont(font(9));g.drawText("UNDERTONE  /  " JUCE_APPLICATION_VERSION_STRING,getWidth()-150,getHeight()-33,125,15,juce::Justification::centredRight);
 }
 void MainComponent::resized(){
     const int w=getWidth();int x=28;
@@ -559,41 +567,12 @@ void MainComponent::resized(){
         swapButtons[i].setBounds(left,299,third,26);restButtons[i].setBounds(left+third+4,299,third,26);compareButtons[i].setBounds(left+2*(third+4),299,third,26);
         if(count==8){const int half=(chordW-12)/2;chordButtons[size_t(i)].setBounds(left,224,chordW-8,62);
             swapButtons[i].setBounds(left,289,half,20);compareButtons[i].setBounds(left+half+4,289,half,20);restButtons[i].setBounds(left,312,chordW-8,20);}}
-    const int knobW=(w-60)/8;
-    for(int i=0;i<8;++i){knobLabels[size_t(i)].setBounds(30+i*knobW,385,knobW,24);knobs[size_t(i)].setBounds(32+i*knobW,412,knobW-4,133);}
-    place(slots,3,28,594,155);place(bars,4,195,594,175);place(rhythm,5,382,594,175);
-    place(clockSource,6,570,594,w-760);refreshMidi.setBounds(w-178,594,148,30);
-    const int extraW=(w-58)/5;
-    soundLabels[0].setBounds(28,640,310,20);toneModel.setBounds(28,663,310,30);
-    soundLabels[1].setBounds(358,640,480,20);tonePreset.setBounds(358,663,380,30);
-    for(int i=0;i<10;++i){const int px=28+(i%5)*extraW,py=704+(i/5)*64;advancedLabels[size_t(i)].setBounds(px,py,extraW-10,20);advanced[size_t(i)].setBounds(px,py+21,extraW-10,30);}
-    soundLabels[2].setBounds(28,837,250,20);evolveTarget.setBounds(28,859,250,30);
-    soundLabels[3].setBounds(298,837,300,20);evolvePace.setBounds(298,859,250,30);
-    evolutionHint.setBounds(34,334,w-68,22);
-    compositionLabel.setBounds(600,837,180,20);composition.setBounds(600,859,260,30);formLabel.setBounds(600,895,w-628,20);
-    detailHeading.setBounds(28,917,w-56,20);const int detailW=(w-56)/6;
-    for(int i=0;i<6;++i){detailLabels[i].setBounds(28+i*detailW,948,detailW-10,20);detailControls[i].setBounds(28+i*detailW,971,detailW-10,30);}
-    breathe.setBounds(28,1015,260,30);newMotif.setBounds(310,1015,140,30);detailHint.setBounds(28,1050,w-56,28);
-    melodyVoiceLabel.setBounds(480,1015,120,30);melodyVoice.setBounds(610,1015,260,30);
-    percussionHeading.setBounds(28,1092,w-56,20);const int percussionW=(w-58)/4;
-    for(int i=0;i<4;++i){percussionLabels[i].setBounds(28+i*percussionW,1120,percussionW-10,20);percussionControls[i].setBounds(28+i*percussionW,1143,percussionW-10,30);}
-    newBeat.setBounds(28,1184,140,30);percussionHint.setBounds(190,1182,w-218,32);
-    place(tempo,7,28,1244,300);audio.setBounds(358,1244,155,30);recover.setBounds(525,1244,110,30);
-    clockHint.setBounds(650,1239,w-680,40);
-    // Keep the existing control rows aligned while inserting chord actions and cycle controls.
-    for(auto* child:getChildren())if(child!=&messageLabel&&child!=&cycleHeading&&child!=&cycleHint
-        &&child!=&compositionCycle&&child!=&motifCycle&&child!=&compositionInterval&&child!=&motifInterval
-        &&child!=&compositionIntervalLabel&&child!=&motifIntervalLabel){
-        const int y=child->getY();if(y>=304)child->setTopLeftPosition(child->getX(),y+32+(y>=1092?140:0));}
-    // The eight-slot second action row belongs to the fixed harmony strip.
-    if(count==8)for(auto& button:restButtons)button.setTopLeftPosition(button.getX(),312);
-    cycleHeading.setBounds(28,1124,w-56,20);
-    compositionCycle.setBounds(28,1154,260,30);compositionIntervalLabel.setBounds(298,1154,110,30);compositionInterval.setBounds(410,1154,130,30);
-    motifCycle.setBounds(570,1154,235,30);motifIntervalLabel.setBounds(805,1154,110,30);motifInterval.setBounds(917,1154,135,30);
-    cycleHint.setBounds(28,1194,w-56,40);
-    for(auto* child:getChildren())child->setVisible(!performanceView);
-    juce::Component* extras[]{&storeA,&storeB,&recallA,&recallB,&sceneHeading,&sceneCycle,&sceneInterval,&sceneVariations,&motifMode,&motifModeLabel,&varyMotif,&newFigure,&phrasing,&room,&roomLabel,&performanceLevel,&performanceLevelLabel,&keepMoment,&recordAudio,&exportMidi,&exportBars,&captureHint};
-    for(auto* child:extras)child->setVisible(performanceView);
+    // Each view owns its geometry explicitly; switching pages only changes visibility.
+    for(auto* child:getChildren())child->setVisible(false);
+    for(auto& control:knobs){control.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);control.setTextBoxStyle(juce::Slider::TextBoxBelow,false,94,24);}
+    for(int i=0;i<6;++i){detailControls[i].setSliderStyle(juce::Slider::LinearHorizontal);detailControls[i].setTextBoxStyle(juce::Slider::TextBoxRight,false,52,24);detailLabels[i].setJustificationType(juce::Justification::centredLeft);}
+    for(int i=0;i<4;++i){percussionControls[i].setSliderStyle(juce::Slider::LinearHorizontal);percussionControls[i].setTextBoxStyle(juce::Slider::TextBoxRight,false,52,24);percussionLabels[i].setJustificationType(juce::Justification::centredLeft);}
+    evolutionHint.setVisible(true);evolutionHint.setBounds(34,364,w-68,22);
     juce::Component* common[]{&performanceTab,&soundTab,&transportLabel,&messageLabel,&play,&stop,&panic,&generateButton,&lockAll,&undo,&save,&load,&key,&mode,&character,&evolve,&rootless,&wide,&percussionEnabled,&swapStyle};
     for(auto* child:common)child->setVisible(true);
     for(int i=0;i<3;++i)labels[i].setVisible(true);
@@ -602,7 +581,8 @@ void MainComponent::resized(){
     swapStyle.setBounds(w-250,190,215,28);
     for(int i=0;i<8;++i){const bool visible=i<shown.session.music.slots;chordButtons[i].setVisible(visible);swapButtons[i].setVisible(visible);restButtons[i].setVisible(visible);compareButtons[i].setVisible(visible);}
     if(performanceView){
-        evolutionHint.setVisible(true);evolutionHint.setBounds(34,364,w-68,22);
+        juce::Component* extras[]{&storeA,&storeB,&recallA,&recallB,&sceneHeading,&sceneCycle,&sceneInterval,&sceneVariations,&motifMode,&motifModeLabel,&varyMotif,&newFigure,&phrasing,&room,&roomLabel,&performanceLevel,&performanceLevelLabel,&keepMoment,&recordAudio,&exportMidi,&exportBars,&captureHint};
+        for(auto* child:extras)child->setVisible(true);
         sceneHeading.setBounds(34,402,w-68,22);recallA.setBounds(34,429,92,27);storeA.setBounds(132,429,66,27);
         recallB.setBounds(218,429,92,27);storeB.setBounds(316,429,66,27);sceneCycle.setBounds(420,429,160,27);sceneInterval.setBounds(585,429,125,27);sceneVariations.setBounds(730,429,190,27);
         const int mixW=(w-72)/6;
@@ -621,7 +601,7 @@ void MainComponent::resized(){
         tempo.setVisible(true);labels[7].setVisible(true);labels[7].setBounds(28,747,80,18);tempo.setBounds(100,752,240,30);
         audio.setVisible(true);audio.setBounds(358,752,155,30);recover.setVisible(true);recover.setBounds(525,752,110,30);
         clockHint.setVisible(true);clockHint.setBounds(650,746,w-680,40);
-    }
+    }else layoutSoundEditor();
 }
 void MainComponent::smokeTest(const juce::File& directory){
     // Optional fixture for repeatable layout inspection; only used by --smoke.
@@ -641,12 +621,23 @@ void MainComponent::smokeTest(const juce::File& directory){
     else report+="No active audio device\n";
     report+="MIDI render delay: "+juce::String(shown.midiDelayMs,3)+" ms; late="+juce::String(shown.lateMidi)+"; discarded="+juce::String(shown.discardedMidi)+"; resets="+juce::String(shown.midiResets)+"\n";
     for(const auto& device:juce::MidiInput::getAvailableDevices())report+="MIDI: "+device.name+"\n";
-    directory.getChildFile("smoke.txt").replaceWithText(report);
-    // Capture both views from the same state for visual regression inspection.
-    const bool previousView=performanceView;setPerformanceView(false);
-    if(auto stream=directory.getChildFile("sound.png").createOutputStream()){
-        if(stream->setPosition(0)&&stream->truncate().wasOk())png.writeImageToStream(createComponentSnapshot(getLocalBounds()),*stream);
+    // Capture each focused section from identical state for visual regression inspection.
+    const auto beforeNavigation=encodeSession(editing);const auto beforeSequence=sentSequence;
+    const bool previousView=performanceView;const int previousPage=soundPage;setPerformanceView(false);
+    const char* pageFiles[]{"sound.png","sound-envelope.png","sound-effects.png","sound-layers.png","sound-percussion.png","sound-phrase-midi.png"};
+    const int originalWidth=getWidth(),originalHeight=getHeight();
+    for(int size=0;size<2;++size){
+        if(size==1)setSize(1080,850);
+        for(int page=0;page<6;++page){selectSoundPage(page);
+            const auto name=juce::String(size==1?"minimum-":"")+pageFiles[page];
+            if(auto stream=directory.getChildFile(name).createOutputStream()){
+                if(stream->setPosition(0)&&stream->truncate().wasOk())png.writeImageToStream(createComponentSnapshot(getLocalBounds()),*stream);
+            }
+        }
     }
-    setPerformanceView(previousView);
+    setSize(originalWidth,originalHeight);
+    selectSoundPage(previousPage);setPerformanceView(previousView);
+    report+="Sound navigation preserves session and sends no engine commands: "+juce::String(beforeNavigation==encodeSession(editing)&&beforeSequence==sentSequence?"PASS":"FAIL")+"\n";
+    directory.getChildFile("smoke.txt").replaceWithText(report);
 }
 }

@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.22)
-project(Undertone VERSION 0.9.0 LANGUAGES C CXX)
+project(Undertone VERSION 0.10.0 LANGUAGES C CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 option(UNDERTONE_APP "Build the native desktop application" ON)
@@ -62,7 +62,7 @@ if(UNDERTONE_APP)
     add_custom_command(OUTPUT "${undertone_generated_dir}/Undertone_resources.rc"
       APPEND DEPENDS "${undertone_info_file}")
   endif()
-  target_sources(Undertone PRIVATE src/app/Main.cpp src/app/MainComponent.cpp src/app/InstrumentTheme.cpp src/app/SessionFile.cpp src/app/MidiExport.cpp)
+  target_sources(Undertone PRIVATE src/app/Main.cpp src/app/MainComponent.cpp src/app/InstrumentTheme.cpp src/app/SoundEditor.cpp src/app/SessionFile.cpp src/app/MidiExport.cpp)
   target_compile_definitions(Undertone PRIVATE JUCE_WEB_BROWSER=0 JUCE_USE_CURL=0
     JUCE_APPLICATION_NAME_STRING="Undertone" JUCE_APPLICATION_VERSION_STRING="${PROJECT_VERSION}")
   target_link_libraries(Undertone PRIVATE undertone_core juce::juce_audio_utils
@@ -88,6 +88,7 @@ if(UNDERTONE_APP)
   install(FILES docs/cycles-0.7.md DESTINATION docs)
   install(FILES docs/performance-0.8.md DESTINATION docs)
   install(FILES docs/ui-0.9.md DESTINATION docs)
+  install(FILES docs/sound-editor-0.10.md DESTINATION docs)
   install(FILES docs/quick-start.md docs/build-status.md docs/third-party.md docs/software-prd.md docs/hardware-prd.md docs/mac-verification.md docs/sound-design-0.2.md docs/arrangement-0.3.md docs/percussion-0.4.md DESTINATION docs)
   install(FILES "${JUCE_SOURCE_DIR}/LICENSE.md" DESTINATION licenses RENAME JUCE-LICENSE.md)
 endif()

@@ -1,6 +1,10 @@
-**Software build status — October 31, 2026**
+**Software build status — November 1, 2026**
 
 This is a playable Windows prototype with substantial MVP functionality. The full Windows/macOS MVP release is not yet verified. Source support, a CI definition, and successful Windows tests must not be described as a tested Mac release or tested Elektron interoperability.
+
+**v0.10.0 focused Sound editor.** Sound now uses six sections in the same 850-pixel content height as Performance. Engine-aware texture labels and dimmed unsupported parameters make the existing synthesis controls clearer. All eleven Windows CTest suites pass in 43.67 seconds. The musical core, session serialization and MIDI export are unchanged from v0.9. See the [editor guide](sound-editor-0.10.md).
+
+**Initial CI evidence (v0.9.0).** [Run 41270997567](https://github.com/michaelbuckner/undertone/actions/runs/41270997567) passed both Windows and macOS jobs, including universal Mac compilation, native and Rosetta test runs, packaging and artifact upload. This supersedes older notes that Mac compilation had never run. It does not establish interactive Mac audio/UI behavior or physical Elektron timing.
 
 **v0.9.0 native UI polish.** The approved dark studio direction adds charcoal panels, warm ivory type, amber focus, custom native controls, voiced-note labels, chord playback progress, selected-scene feedback and a distinct recording state. Windows builds successfully; all eleven CTest suites pass in 44.23 seconds. Performance and Sound captures cover four- and eight-chord layouts. The musical core, session serialization and MIDI export match the v0.8 source exactly. This is a visual/interaction refinement, not commercial release certification. See [studio interface notes](ui-0.9.md).
 

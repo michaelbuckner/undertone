@@ -53,6 +53,7 @@ void MainComponent::Theme::drawLinearSlider(juce::Graphics& g,int x,int y,int w,
     g.setColour(slider.hasKeyboardFocus(true)?ink:colour);g.drawRoundedRectangle(position-4,cy-8,8,16,2,1.5f);
 }
 void MainComponent::Theme::drawRotarySlider(juce::Graphics& g,int x,int y,int w,int h,float value,float start,float end,juce::Slider& slider){
+    if(!slider.isEnabled())g.beginTransparencyLayer(.32f);
     const float radius=std::min(w,h)*.37f,cx=x+w*.5f,cy=y+h*.5f,angle=start+value*(end-start);
     for(int i=0;i<=10;++i){const auto a=start+i*(end-start)/10;g.setColour(i<=int(value*10)?accent.withAlpha(.7f):line);
         g.drawLine(cx+std::sin(a)*(radius+6),cy-std::cos(a)*(radius+6),cx+std::sin(a)*(radius+9),cy-std::cos(a)*(radius+9),1);}
@@ -61,5 +62,6 @@ void MainComponent::Theme::drawRotarySlider(juce::Graphics& g,int x,int y,int w,
     g.setGradientFill(juce::ColourGradient(raised.brighter(.08f),cx,cy-radius,background,cx,cy+radius,false));g.fillEllipse(cx-radius+5,cy-radius+5,2*radius-10,2*radius-10);
     g.setColour(slider.hasKeyboardFocus(true)?accent:line);g.drawEllipse(cx-radius+5,cy-radius+5,2*radius-10,2*radius-10,1);
     g.setColour(ink);g.drawLine(cx+std::sin(angle)*(radius*.50f),cy-std::cos(angle)*(radius*.50f),cx+std::sin(angle)*(radius-10),cy-std::cos(angle)*(radius-10),2);
+    if(!slider.isEnabled())g.endTransparencyLayer();
 }
 }

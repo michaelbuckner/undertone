@@ -14,7 +14,7 @@ public:
     void resized() override;
     bool keyPressed(const juce::KeyPress&) override;
     void smokeTest(const juce::File& directory);
-    int preferredHeight() const noexcept {return performanceView?850:1502;}
+    int preferredHeight() const noexcept {return 850;}
 private:
     struct Theme : juce::LookAndFeel_V4 {
         Theme();
@@ -50,6 +50,9 @@ private:
     uint64_t seenMidiResets=0;
     uint64_t seenRevision=0;
     bool performanceView=true;
+    int soundPage=0;
+    std::array<juce::TextButton,6> soundPages;
+    juce::Label soundPageTitle,soundPageHint;
     bool refreshing=false, recoveryArmed=false;
     juce::String notification, selectedMidi;
     juce::CriticalSection errorLock;
@@ -115,6 +118,9 @@ private:
     void changeCycles();
     void changeScenes();
     void setPerformanceView(bool);
+    void selectSoundPage(int);
+    void layoutSoundEditor();
+    void refreshSoundEditor();
     void keepCurrentMoment();
     void toggleRecording();
     void stopRecording();
