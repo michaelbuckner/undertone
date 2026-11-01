@@ -29,6 +29,7 @@ MainComponent::Theme::Theme() {
     setColour(juce::TooltipWindow::backgroundColourId,raised);
     setColour(juce::TooltipWindow::textColourId,ink);
     setColour(juce::TooltipWindow::outlineColourId,line);
+    setColour(juce::AlertWindow::backgroundColourId,panel);setColour(juce::AlertWindow::textColourId,ink);setColour(juce::AlertWindow::outlineColourId,line);
     setColour(juce::TextEditor::highlightColourId,accent.withAlpha(.3f));
     setColour(juce::ScrollBar::thumbColourId,line.brighter(.2f));
 }
@@ -51,6 +52,7 @@ void MainComponent::ChordButton::paintButton(juce::Graphics& g,bool over,bool do
 MainComponent::MainComponent() {
     setLookAndFeel(&theme);setWantsKeyboardFocus(true);setSize(1120,1502);
     addAndMakeVisible(transportLabel);addAndMakeVisible(messageLabel);addAndMakeVisible(clockHint);
+    addAndMakeVisible(browserTab);addAndMakeVisible(documentLabel);documentLabel.setFont(font(11));browserTab.getProperties().set("tab",true);browserTab.onClick=[this]{showBrowser();};
     transportLabel.setFont(font(11,true));transportLabel.setJustificationType(juce::Justification::centredRight);
     messageLabel.setFont(font(11));messageLabel.setName("Status");
     clockHint.setFont(font(11));clockHint.setName("MIDI timing");
@@ -207,9 +209,9 @@ MainComponent::MainComponent() {
     play.onClick=[this]{send(Action::play);};stop.onClick=[this]{send(Action::stop);};panic.onClick=[this]{send(Action::panic);};
     generateButton.onClick=[this]{send(Action::generate);notification=shown.playing?"New phrase queued for the loop boundary.":"Generated a new phrase.";};
     lockAll.onClick=[this]{bool locked=true;for(int i=0;i<shown.session.music.slots;++i)locked&=shown.session.phrase.chords[i].locked;send(Action::lockAll,locked?0:1);};
-    undo.onClick=[this]{send(Action::undo);};save.onClick=[this]{chooseSave();};load.onClick=[this]{openSession();};
+    undo.onClick=[this]{send(Action::undo);};save.onClick=[this]{saveCurrentSession();};load.onClick=[this]{openSession();};
     audio.onClick=[this]{showAudioSettings();};refreshMidi.onClick=[this]{updateMidiList();};
-    recover.onClick=[this]{Session s;auto result=loadSession(recoveryFile,s);if(result.wasOk()){editing=s;showSession(s);send(Action::load);notification="Recovered session; playback is stopped.";}else notification=result.getErrorMessage();};
+    recover.onClick=[this]{loadLibraryFile(recoveryFile,true);};
     for(auto* box:{&key,&mode,&slots,&bars,&rhythm})box->onChange=[this]{if(!refreshing)changeMusic();};
     for(auto* b:{&rootless,&wide})b->onClick=[this]{changeMusic();};
     evolve.onClick=[this]{changeEvolution();};
@@ -218,15 +220,18 @@ MainComponent::MainComponent() {
     toneModel.onChange=[this]{if(!refreshing){editing.patch.model=ToneModel(toneModel.getSelectedId()-1);editing.patch.tone=0;showSession(editing);tonePreset.setSelectedId(100,juce::dontSendNotification);send(Action::patch);}};
     tonePreset.onChange=[this]{if(!refreshing&&tonePreset.getSelectedId()!=100){editing.patch=makeTone(tonePreset.getSelectedId()-1);showSession(editing);send(Action::patch);notification="Tone changed; your chords, key and tempo are retained.";}};
     tempo.onValueChange=[this]{if(!refreshing){editing.bpm=tempo.getValue();send(Action::tempo);}};
-    character.onChange=[this]{if(refreshing)return;auto s=makePreset(character.getSelectedId()-1,editing.seed);
-        s.scenes=shown.session.scenes;s.sceneCycle=shown.session.sceneCycle;s.sceneBars=shown.session.sceneBars;s.sceneVariations=shown.session.sceneVariations;s.sceneVariationSeed=shown.session.sceneVariationSeed;
-        editing=s;showSession(s);send(Action::load);notification="Starting character loaded; scenes retained. Press Play when ready.";};
+    character.onChange=[this]{if(!refreshing)loadFactoryPreset(character.getSelectedId()-1);};
     clockSource.onChange=[this]{if(!refreshing)chooseMidi();};
     editing=makePreset(10);shown.session=editing;shown.next=editing;showSession(editing);
     Command initial;initial.action=Action::load;initial.session=editing;engine.command(initial);
     const auto overrideDirectory=juce::SystemStats::getEnvironmentVariable("UNDERTONE_DATA_DIR",{});
     const auto dataDirectory=overrideDirectory.isNotEmpty()?juce::File(overrideDirectory):juce::File::getSpecialLocation(juce::File::userApplicationDataDirectory).getChildFile("Undertone");
     recoveryFile=dataDirectory.getChildFile("recovery.undertone");audioSettingsFile=dataDirectory.getChildFile("audio.xml");
+    library=std::make_unique<SessionLibrary>(dataDirectory,captureDirectory().getChildFile("Moments"));
+    browser=std::make_unique<SessionBrowser>(*library);addChildComponent(*browser);
+    browser->onLoad=[this](const LibraryEntry& entry){if(entry.preset>=0)loadFactoryPreset(entry.preset);else loadLibraryFile(entry.file);};
+    browser->onSaveAs=[this]{chooseSave();};browser->onOpen=[this]{openSession();};browser->onAddFolder=[this]{addLibraryFolder();};
+    document.establish(editing,presetName(editing.preset));refreshDocumentLabel();
     recover.setEnabled(recoveryFile.existsAsFile());
     const auto savedAudio=juce::XmlDocument::parse(audioSettingsFile);
     const auto error=devices.initialise(0,2,savedAudio.get(),true);
@@ -247,12 +252,13 @@ MainComponent::~MainComponent(){
     if(auto state=devices.createStateXml()){audioSettingsFile.getParentDirectory().createDirectory();state->writeTo(audioSettingsFile);}
     devices.closeAudioDevice();setLookAndFeel(nullptr);
 }
-void MainComponent::send(Action action,int value){
+bool MainComponent::send(Action action,int value){
     Command c;c.action=action;c.session=editing;c.value=value;c.sequence=++sentSequence;c.midiEpoch=midiEpoch.load();
-    if(!commands.push(c))notification="Control queue busy; please retry.";
+    if(!commands.push(c)){--sentSequence;notification="Control queue busy; please retry.";return false;}
     else { if(action!=Action::external)recoveryArmed=true;
         if(action==Action::undo||action==Action::lockAll)syncSequence=c.sequence;
     }
+    return true;
 }
 void MainComponent::dispatch(const Command& c){
     if(c.action==Action::external||c.action==Action::load||c.action==Action::panic||c.action==Action::stop)midiTimeline.changeSource(c.midiEpoch);
@@ -298,7 +304,7 @@ void MainComponent::changeScenes(){
     editing.sceneCycle=sceneCycle.getToggleState();editing.sceneBars=sceneInterval.getSelectedId();editing.sceneVariations=sceneVariations.getToggleState();send(Action::sceneControls);
 }
 void MainComponent::setPerformanceView(bool value){
-    performanceView=value;
+    browserView=false;performanceView=value;
     if(auto* viewport=findParentComponentOfClass<juce::Viewport>()){viewport->setViewPosition(0,0);setSize(getWidth(),std::max(preferredHeight(),viewport->getHeight()-16));}
     else setSize(getWidth(),preferredHeight());
     resized();repaint();
@@ -308,6 +314,7 @@ void MainComponent::keepCurrentMoment(){
     const auto file=directory.getNonexistentChildFile("Moment "+juce::Time::getCurrentTime().formatted("%Y-%m-%d %H-%M-%S"),".undertone");
     const auto result=saveSession(file,shown.session);
     notification=result.wasOk()?"Kept: "+file.getFullPathName():result.getErrorMessage();
+    if(result.wasOk()){library->remember(file);browser->refresh();}
 }
 void MainComponent::toggleRecording(){
     if(recordingWriter){stopRecording();return;}
@@ -407,24 +414,6 @@ void MainComponent::showAudioSettings(){
     options.dialogBackgroundColour=panel;options.escapeKeyTriggersCloseButton=true;options.useNativeTitleBar=true;
     options.resizable=false;options.componentToCentreAround=this;audioWindow=options.launchAsync();
 }
-void MainComponent::chooseSave(){
-    chooser=std::make_unique<juce::FileChooser>("Save accompaniment session",juce::File::getSpecialLocation(juce::File::userDocumentsDirectory).getChildFile("Untitled.undertone"),"*.undertone");
-    auto safe=juce::Component::SafePointer<MainComponent>(this);
-    chooser->launchAsync(juce::FileBrowserComponent::saveMode|juce::FileBrowserComponent::canSelectFiles|juce::FileBrowserComponent::warnAboutOverwriting,[safe](const juce::FileChooser& fc){
-        if(!safe||fc.getResult()==juce::File())return;
-        auto result=saveSession(fc.getResult().withFileExtension("undertone"),safe->shown.session);
-        safe->notification=result.wasOk()?"Saved current phrase and settings. Pending harmonic changes are not saved.":result.getErrorMessage();
-    });
-}
-void MainComponent::openSession(){
-    chooser=std::make_unique<juce::FileChooser>("Open accompaniment session",juce::File(),"*.undertone");
-    auto safe=juce::Component::SafePointer<MainComponent>(this);
-    chooser->launchAsync(juce::FileBrowserComponent::openMode|juce::FileBrowserComponent::canSelectFiles,[safe](const juce::FileChooser& fc){
-        if(!safe||fc.getResult()==juce::File())return;Session s;auto result=loadSession(fc.getResult(),s);
-        if(result.wasOk()){safe->editing=s;safe->showSession(s);safe->send(Action::load);safe->notification="Session loaded; playback stopped.";}
-        else safe->notification=result.getErrorMessage();
-    });
-}
 void MainComponent::timerCallback(){
     if(recordingWriter&&(recordingChanged.load()||recordingOverflow.load()))stopRecording();
     const int previousSlots=shown.session.music.slots;
@@ -440,7 +429,7 @@ void MainComponent::timerCallback(){
             if(!shown.manualPending){editing.music.composition=shown.session.music.composition;composition.setSelectedId(int(editing.music.composition)+1,juce::dontSendNotification);}}
         if(syncSequence&&shown.sequence>=syncSequence){editing=shown.pending?shown.next:shown.session;showSession(editing);syncSequence=0;}
         if(shown.rejected!=lastRejected){lastRejected=shown.rejected;notification="Edit not applied. Unlock the chord before swapping/resting; unlock the phrase before changing key, register, spacing or composition.";editing=shown.session;showSession(editing);}
-        for(int i=0;i<8;++i){auto& button=chordButtons[size_t(i)];const bool visible=i<shown.session.music.slots;button.setVisible(visible);swapButtons[i].setVisible(visible);restButtons[i].setVisible(visible);compareButtons[i].setVisible(visible);if(!visible)continue;
+        for(int i=0;i<8;++i){auto& button=chordButtons[size_t(i)];const bool visible=!browserView&&i<shown.session.music.slots;button.setVisible(visible);swapButtons[i].setVisible(visible);restButtons[i].setVisible(visible);compareButtons[i].setVisible(visible);if(!visible)continue;
             const auto& chord=shown.session.phrase.chords[i];juce::String text=juce::String(i+1)+"  "+chordName(chord);
             const auto& target=shown.manualPending&&i<shown.next.music.slots?shown.next.phrase.chords[i]:chord;
             swapButtons[i].setEnabled(!chord.locked);restButtons[i].setEnabled(!chord.locked);
@@ -491,6 +480,7 @@ void MainComponent::timerCallback(){
         "  |  Next boundary in "+juce::String(shown.evolutionBeats/4,1)+" bars  |  Chord changes: "+juce::String(shown.evolutions);
     if(em.evolve&&em.evolveTarget!=1&&em.variation>0)evolutionText+="  |  Brightness "+juce::String(shown.toneBrightness,2)+" / Texture "+juce::String(shown.toneTexture,2);
     evolutionHint.setText(evolutionText,juce::dontSendNotification);
+    refreshDocumentLabel();
     if(previousSlots!=shown.session.music.slots)resized();repaint();
 }
 void MainComponent::audioDeviceIOCallbackWithContext(const float* const*,int,float* const* outputs,int channels,int samples,const juce::AudioIODeviceCallbackContext&){
@@ -554,7 +544,7 @@ void MainComponent::paint(juce::Graphics& g){
 }
 void MainComponent::resized(){
     const int w=getWidth();int x=28;
-    transportLabel.setBounds(w-450,26,420,25);messageLabel.setBounds(28,getHeight()-46,w-210,39);
+    transportLabel.setBounds(660,26,w-690,25);messageLabel.setBounds(28,getHeight()-46,w-210,39);
     for(auto* b:{&play,&stop,&panic,&generateButton,&lockAll,&undo}){const int width=b==&play?132:b==&generateButton?112:b==&lockAll?120:76;b->setBounds(x,95,width,34);x+=width+8;}
     save.setBounds(w-193,95,75,34);load.setBounds(w-110,95,80,34);
     // Separate the captions from transport above and their fields below.
@@ -578,9 +568,9 @@ void MainComponent::resized(){
     for(auto* child:common)child->setVisible(true);
     for(int i=0;i<3;++i)labels[i].setVisible(true);
     performanceTab.setBounds(340,30,112,32);soundTab.setBounds(457,30,82,32);
-    performanceTab.setToggleState(performanceView,juce::dontSendNotification);soundTab.setToggleState(!performanceView,juce::dontSendNotification);
+    performanceTab.setToggleState(!browserView&&performanceView,juce::dontSendNotification);soundTab.setToggleState(!browserView&&!performanceView,juce::dontSendNotification);
     swapStyle.setBounds(w-250,204,215,22);
-    for(int i=0;i<8;++i){const bool visible=i<shown.session.music.slots;chordButtons[i].setVisible(visible);swapButtons[i].setVisible(visible);restButtons[i].setVisible(visible);compareButtons[i].setVisible(visible);}
+    for(int i=0;i<8;++i){const bool visible=!browserView&&i<shown.session.music.slots;chordButtons[i].setVisible(visible);swapButtons[i].setVisible(visible);restButtons[i].setVisible(visible);compareButtons[i].setVisible(visible);}
     if(performanceView){
         juce::Component* extras[]{&storeA,&storeB,&recallA,&recallB,&sceneHeading,&sceneCycle,&sceneInterval,&sceneVariations,&motifMode,&motifModeLabel,&varyMotif,&newFigure,&phrasing,&room,&roomLabel,&performanceLevel,&performanceLevelLabel,&keepMoment,&recordAudio,&exportMidi,&exportBars,&captureHint};
         for(auto* child:extras)child->setVisible(true);
@@ -603,6 +593,13 @@ void MainComponent::resized(){
         audio.setVisible(true);audio.setBounds(358,752,155,30);recover.setVisible(true);recover.setBounds(525,752,110,30);
         clockHint.setVisible(true);clockHint.setBounds(650,746,w-680,40);
     }else layoutSoundEditor();
+    if(browserView){
+        for(auto* child:getChildren())child->setVisible(false);
+        for(auto* child:std::initializer_list<juce::Component*>{&performanceTab,&soundTab,&transportLabel,&messageLabel,&play,&stop,&panic,&save,&load})child->setVisible(true);
+        browser->setVisible(true);browser->setBounds(20,149,w-40,getHeight()-210);
+    }
+    browserTab.setVisible(true);browserTab.setBounds(550,30,94,32);browserTab.setToggleState(browserView,juce::dontSendNotification);
+    documentLabel.setVisible(true);documentLabel.setBounds(340,65,w-525,17);
 }
 void MainComponent::smokeTest(const juce::File& directory){
     // Optional fixture for repeatable layout inspection; only used by --smoke.
@@ -635,6 +632,11 @@ void MainComponent::smokeTest(const juce::File& directory){
                 if(stream->setPosition(0)&&stream->truncate().wasOk())png.writeImageToStream(createComponentSnapshot(getLocalBounds()),*stream);
             }
         }
+        showBrowser();
+        if(auto stream=directory.getChildFile(size==1?"minimum-library.png":"library.png").createOutputStream()){
+            if(stream->setPosition(0)&&stream->truncate().wasOk())png.writeImageToStream(createComponentSnapshot(getLocalBounds()),*stream);
+        }
+        setPerformanceView(false);
     }
     setSize(originalWidth,originalHeight);
     selectSoundPage(previousPage);setPerformanceView(previousView);

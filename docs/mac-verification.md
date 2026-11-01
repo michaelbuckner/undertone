@@ -10,7 +10,7 @@ In Terminal, change into the extracted project directory and run:
 bash scripts/verify-macos.sh
 ```
 
-The script builds both CPU architectures, runs all eleven suites (core, evolution, detail, melody, composition, cycles, refinements, percussion, MIDI, sessions and export) on the native CPU, verifies the application contains both architectures, launches the app stopped for a smoke check, and prepares a Mac ZIP that preserves application executable permissions. On an Apple silicon Mac with Rosetta already available, it also runs the Intel test binaries; it does not install Rosetta. Translated tests are not a substitute for checking Intel hardware/audio behavior.
+The script builds both CPU architectures, runs all twelve suites (core, evolution, detail, melody, composition, cycles, refinements, percussion, MIDI, sessions, library and export) on the native CPU, verifies the application contains both architectures, launches the app stopped for a smoke check, and prepares a Mac ZIP that preserves application executable permissions. On an Apple silicon Mac with Rosetta already available, it also runs the Intel test binaries; it does not install Rosetta. Translated tests are not a substitute for checking Intel hardware/audio behavior.
 
 Results are saved under `build-macos/verification/`. The log, `native-smoke/smoke.txt`, and `native-smoke/window.png` show the actual outcome. The application is under `build-macos/Undertone_artefacts/Release/Undertone.app`; the packaged copy is `dist/Undertone-macos-universal.zip`. Neither build nor package has been signed/notarized for public distribution.
 

@@ -57,6 +57,7 @@ if [[ "$(uname -m)" == arm64 ]] && arch -x86_64 /usr/bin/true 2>/dev/null; then
   (cd "$root/build-macos" && arch -x86_64 export_tests_artefacts/Release/export_tests)
   arch -x86_64 "$root/build-macos/midi_tests"
   (cd "$root/build-macos" && arch -x86_64 session_tests_artefacts/Release/session_tests)
+  (cd "$root/build-macos" && arch -x86_64 library_tests_artefacts/Release/library_tests)
 else
   printf 'Intel execution not checked. No Rosetta installation was attempted.\n'
 fi

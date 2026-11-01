@@ -2,6 +2,8 @@
 
 This is a playable Windows prototype with substantial MVP functionality. The full Windows/macOS MVP release is not yet verified. Source support, a CI definition, and successful Windows tests must not be described as a tested Mac release or tested Elektron interoperability.
 
+**v0.11.0 preset/session browser.** Library adds searchable factory presets, saved sessions, moments and persistent recent files, with detail inspection before loading. Saved/edited state, Save variation and guarded replacement protect ongoing work. Twelve Windows test suites pass in 43.69 seconds; native interaction checks verify save-copy/load, cancel, reload and backup-preserving Save. Core synthesis and schema 8 serialization are unchanged. See the [library guide](library-0.11.md).
+
 **v0.10.0 focused Sound editor.** Sound now uses six sections in the same 850-pixel content height as Performance. Engine-aware texture labels and dimmed unsupported parameters make the existing synthesis controls clearer. All eleven Windows CTest suites pass in 43.67 seconds. The musical core, session serialization and MIDI export are unchanged from v0.9. See the [editor guide](sound-editor-0.10.md).
 
 **Initial CI evidence (v0.9.0).** [Run 41270997567](https://github.com/michaelbuckner/undertone/actions/runs/41270997567) passed both Windows and macOS jobs, including universal Mac compilation, native and Rosetta test runs, packaging and artifact upload. This supersedes older notes that Mac compilation had never run. It does not establish interactive Mac audio/UI behavior or physical Elektron timing.

@@ -2,6 +2,7 @@
 #include "core/Engine.h"
 #include "core/MidiTimeline.h"
 #include "SessionFile.h"
+#include "SessionBrowser.h"
 #include <juce_audio_utils/juce_audio_utils.h>
 
 namespace undertone {
@@ -50,6 +51,12 @@ private:
     uint64_t seenMidiResets=0;
     uint64_t seenRevision=0;
     bool performanceView=true;
+    bool browserView=false,replacePromptOpen=false,fileDialogOpen=false;
+    SessionDocument document;
+    std::unique_ptr<SessionLibrary> library;
+    std::unique_ptr<SessionBrowser> browser;
+    juce::TextButton browserTab{"Library"};
+    juce::Label documentLabel;
     int soundPage=0;
     std::array<juce::TextButton,6> soundPages;
     juce::Label soundPageTitle,soundPageHint;
@@ -108,7 +115,7 @@ private:
     std::array<juce::Label,10> advancedLabels;
     std::array<juce::Label,8> labels;
     juce::Label transportLabel, messageLabel, clockHint;
-    void send(Action,int value=0);
+    bool send(Action,int value=0);
     void dispatch(const Command&);
     void changeMusic();
     void changePatch();
@@ -118,6 +125,16 @@ private:
     void changeCycles();
     void changeScenes();
     void setPerformanceView(bool);
+    void showBrowser();
+    bool hasSessionEdits() const;
+    void refreshDocumentLabel();
+    void requestReplace(std::function<void()>);
+    void loadFactoryPreset(int);
+    void loadLibraryFile(const juce::File&,bool recovery=false);
+    void applyLibrarySession(const Session&,const juce::String&,const juce::File&);
+    void addLibraryFolder();
+    void saveCurrentSession();
+    bool saveDocument(const juce::File&,const Session&);
     void selectSoundPage(int);
     void layoutSoundEditor();
     void refreshSoundEditor();
@@ -130,7 +147,7 @@ private:
     void chooseMidi();
     void showAudioSettings();
     void openSession();
-    void chooseSave();
+    void chooseSave(std::function<void()> afterSave={});
     void timerCallback() override;
     void audioDeviceIOCallbackWithContext(const float* const*,int,float* const*,int,int,const juce::AudioIODeviceCallbackContext&) override;
     void audioDeviceAboutToStart(juce::AudioIODevice*) override;
