@@ -528,10 +528,10 @@ void MainComponent::paint(juce::Graphics& g){
     g.setColour(ink);g.setFont(font(29,true));g.drawText("undertone",70,19,210,37,juce::Justification::centredLeft);
     g.setColour(muted);g.setFont(font(10));g.drawText("GENERATIVE ACCOMPANIMENT",72,55,250,17,juce::Justification::centredLeft);
     auto surface=[&](float x,float y,float width,float height){g.setColour(panel);g.fillRoundedRectangle(x,y,width,height,7);g.setColour(line.withAlpha(.55f));g.drawRoundedRectangle(x+.5f,y+.5f,width-1,height-1,7,1);};
-    surface(20,184,w-40,206);
-    g.setColour(accent);g.fillRoundedRectangle(33,195,3,13,1);
-    g.setColour(muted);g.setFont(font(11,true));g.drawText("HARMONY",44,191,120,22,juce::Justification::centredLeft);
-    g.setFont(font(11));g.drawText("Click a chord to lock its voicing",164,191,300,22,juce::Justification::centredLeft);
+    surface(20,200,w-40,190);
+    g.setColour(accent);g.fillRoundedRectangle(33,208,3,13,1);
+    g.setColour(muted);g.setFont(font(11,true));g.drawText("HARMONY",44,204,120,22,juce::Justification::centredLeft);
+    g.setFont(font(11));g.drawText("Click a chord to lock its voicing",164,204,300,22,juce::Justification::centredLeft);
     const auto current=chordName(shown.session.phrase.chords[shown.slot]);const auto next=chordName(shown.session.phrase.chords[(shown.slot+1)%shown.session.music.slots]);
     g.setColour(muted);g.setFont(font(10,true));g.drawText("NOW",35,341,38,20,juce::Justification::centredLeft);
     g.setColour(ink);g.setFont(font(16,true));g.drawText(current,76,337,210,27,juce::Justification::centredLeft);
@@ -555,18 +555,19 @@ void MainComponent::paint(juce::Graphics& g){
 void MainComponent::resized(){
     const int w=getWidth();int x=28;
     transportLabel.setBounds(w-450,26,420,25);messageLabel.setBounds(28,getHeight()-46,w-210,39);
-    for(auto* b:{&play,&stop,&panic,&generateButton,&lockAll,&undo}){const int width=b==&play?132:b==&generateButton?112:b==&lockAll?120:76;b->setBounds(x,103,width,34);x+=width+8;}
-    save.setBounds(w-193,103,75,34);load.setBounds(w-110,103,80,34);
-    auto place=[&](juce::Component& c,int index,int px,int py,int width){labels[size_t(index)].setBounds(px,py-20,width,18);c.setBounds(px,py,width,30);};
-    place(key,0,28,153,82);place(mode,1,120,153,155);place(character,2,285,153,282);
-    evolve.setBounds(580,153,90,30);rootless.setBounds(678,153,110,30);
-    wide.setBounds(790,153,140,30);percussionEnabled.setBounds(940,153,130,30);
+    for(auto* b:{&play,&stop,&panic,&generateButton,&lockAll,&undo}){const int width=b==&play?132:b==&generateButton?112:b==&lockAll?120:76;b->setBounds(x,95,width,34);x+=width+8;}
+    save.setBounds(w-193,95,75,34);load.setBounds(w-110,95,80,34);
+    // Separate the captions from transport above and their fields below.
+    auto place=[&](juce::Component& c,int index,int px,int py,int width){labels[size_t(index)].setBounds(px,py-20,width,16);c.setBounds(px,py,width,30);};
+    place(key,0,28,159,82);place(mode,1,120,159,155);place(character,2,285,159,282);
+    evolve.setBounds(580,159,90,30);rootless.setBounds(678,159,110,30);
+    wide.setBounds(790,159,140,30);percussionEnabled.setBounds(940,159,130,30);
     const int count=shown.session.music.slots;const int chordW=(w-80)/count;
     for(int i=0;i<8;++i){const int left=34+i*chordW,third=(chordW-16)/3;
-        chordButtons[size_t(i)].setBounds(left,224,chordW-8,72);
-        swapButtons[i].setBounds(left,299,third,26);restButtons[i].setBounds(left+third+4,299,third,26);compareButtons[i].setBounds(left+2*(third+4),299,third,26);
-        if(count==8){const int half=(chordW-12)/2;chordButtons[size_t(i)].setBounds(left,224,chordW-8,62);
-            swapButtons[i].setBounds(left,289,half,20);compareButtons[i].setBounds(left+half+4,289,half,20);restButtons[i].setBounds(left,312,chordW-8,20);}}
+        chordButtons[size_t(i)].setBounds(left,230,chordW-8,72);
+        swapButtons[i].setBounds(left,305,third,26);restButtons[i].setBounds(left+third+4,305,third,26);compareButtons[i].setBounds(left+2*(third+4),305,third,26);
+        if(count==8){const int half=(chordW-12)/2;chordButtons[size_t(i)].setBounds(left,230,chordW-8,62);
+            swapButtons[i].setBounds(left,295,half,20);compareButtons[i].setBounds(left+half+4,295,half,20);restButtons[i].setBounds(left,318,chordW-8,20);}}
     // Each view owns its geometry explicitly; switching pages only changes visibility.
     for(auto* child:getChildren())child->setVisible(false);
     for(auto& control:knobs){control.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);control.setTextBoxStyle(juce::Slider::TextBoxBelow,false,94,24);}
@@ -578,7 +579,7 @@ void MainComponent::resized(){
     for(int i=0;i<3;++i)labels[i].setVisible(true);
     performanceTab.setBounds(340,30,112,32);soundTab.setBounds(457,30,82,32);
     performanceTab.setToggleState(performanceView,juce::dontSendNotification);soundTab.setToggleState(!performanceView,juce::dontSendNotification);
-    swapStyle.setBounds(w-250,190,215,28);
+    swapStyle.setBounds(w-250,204,215,22);
     for(int i=0;i<8;++i){const bool visible=i<shown.session.music.slots;chordButtons[i].setVisible(visible);swapButtons[i].setVisible(visible);restButtons[i].setVisible(visible);compareButtons[i].setVisible(visible);}
     if(performanceView){
         juce::Component* extras[]{&storeA,&storeB,&recallA,&recallB,&sceneHeading,&sceneCycle,&sceneInterval,&sceneVariations,&motifMode,&motifModeLabel,&varyMotif,&newFigure,&phrasing,&room,&roomLabel,&performanceLevel,&performanceLevelLabel,&keepMoment,&recordAudio,&exportMidi,&exportBars,&captureHint};
