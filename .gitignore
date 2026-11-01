@@ -1,0 +1,11 @@
+/build*/
+/vendor/
+/dist/
+/.cache/
+*.user
+.DS_Store
+/.vs/
+/.idea/
+.env
+.env.*
+!.env.example
