@@ -4,6 +4,8 @@ Native software prototype v0.12.1 · November 1, 2026 · Owner: Mike
 
 A personal instrument that generates chords and pads for bass practice, jams with Elektron beats, and darker electronic composition. The first Windows application is implemented and locally tested. macOS uses the same C++/JUCE source. The initial GitHub CI run built its universal package and passed native and Rosetta tests; interactive Mac audio/UI verification is still pending.
 
+![Undertone v0.12.1 Performance view showing chord cards, scene controls, and layer levels](docs/images/undertone-performance.png)
+
 - [Quick start](docs/quick-start.md): run the app, generate harmony, save a session, and connect MIDI clock.
 - [Sound and evolution changes](docs/sound-design-0.2.md): independent Ladder, DCO and FM tones, audible Evolve, legacy session migration, and architecture references.
 - [Arrangement and phone auditions](docs/arrangement-0.3.md): recurring melodies, broken chords, sixteen-bar form, drift and filtered echo.
