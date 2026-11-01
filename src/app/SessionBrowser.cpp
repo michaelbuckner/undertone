@@ -3,6 +3,7 @@
 
 namespace undertone {
 using namespace design;
+namespace { constexpr int resultsTop=129,resultsInset=16; }
 SessionBrowser::SessionBrowser(SessionLibrary& source):library(source){
     for(auto* label:{&heading,&description,&searchLabel,&filterLabel,&count,&title,&kind,&details,&path,&hint}){addAndMakeVisible(label);label->setFont(font(12));label->setColour(juce::Label::textColourId,muted);}
     heading.setText("Your library",juce::dontSendNotification);heading.setFont(font(25,true));heading.setColour(juce::Label::textColourId,ink);
@@ -54,15 +55,15 @@ void SessionBrowser::selectedRowsChanged(int row){
 }
 void SessionBrowser::returnKeyPressed(int row){if(load.isEnabled()&&row>=0&&row<int(entries.size())&&onLoad)onLoad(entries[row]);}
 void SessionBrowser::paint(juce::Graphics& g){
-    g.fillAll(background);g.setColour(panel);g.fillRoundedRectangle(0,100,float(getWidth()),float(getHeight()-156),7);
-    g.setColour(line);g.drawVerticalLine(getWidth()/2,116.f,float(getHeight()-72));
+    g.fillAll(background);g.setColour(panel);g.fillRoundedRectangle(0,float(resultsTop),float(getWidth()),float(getHeight()-56-resultsTop),7);
+    g.setColour(line);g.drawVerticalLine(getWidth()/2,float(resultsTop+resultsInset),float(getHeight()-72));
 }
 void SessionBrowser::resized(){
     const int w=getWidth(),h=getHeight(),right=w/2+22,rw=w-right-18;
     heading.setBounds(8,0,400,34);description.setBounds(10,36,w-20,20);
     searchLabel.setBounds(8,66,100,18);search.setBounds(8,87,w/2-28,30);
     filterLabel.setBounds(right,66,100,18);filter.setBounds(right,87,210,30);refreshButton.setBounds(w-114,87,106,30);
-    list.setBounds(8,130,w/2-24,h-218);count.setBounds(10,h-83,w/2-24,20);
+    list.setBounds(8,resultsTop+resultsInset,w/2-24,h-88-resultsTop-resultsInset);count.setBounds(10,h-83,w/2-24,20);
     title.setBounds(right,135,rw,55);kind.setBounds(right,191,rw,20);details.setBounds(right,225,rw,220);path.setBounds(right,450,rw,std::max(40,h-550));
     load.setBounds(right,h-100,150,34);open.setBounds(right+162,h-100,110,34);
     saveAs.setBounds(8,h-40,154,34);addFolder.setBounds(174,h-40,122,34);hint.setBounds(314,h-42,w-320,38);
