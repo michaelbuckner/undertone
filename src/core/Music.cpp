@@ -216,22 +216,36 @@ const char* presetName(int i) {
 Session makePreset(int index, uint32_t seed) {
     Session s; s.seed=seed; s.preset=std::clamp(index,0,presetCount-1);
     switch(s.preset) {
-        case 0: s.music.bars=2; s.patch.attack=1.2f; s.patch.space=0.55f; break;
-        case 1: s.music.mode=Mode::major; s.music.bars=2; s.patch.brightness=.65f; s.patch.chorus=.55f; s.patch.space=.65f; break;
-        case 2: s.music.complexity=2; s.patch.attack=.04f; s.patch.release=1.4f; s.patch.brightness=.32f; break;
-        case 3: s.music.complexity=2; s.music.rootless=true; s.patch.attack=.18f; s.patch.brightness=.28f; s.patch.chorus=.4f; break;
-        case 4: s.music.mode=Mode::mixolydian;s.music.rhythm=Rhythm::syncopated;s.music.rootless=true;s.bpm=104;s.patch=makeTone(2);break;
-        case 5: s.music.rhythm=Rhythm::syncopated;s.music.rootless=true;s.music.complexity=2;s.bpm=110;s.patch=makeTone(4);break;
-        case 6: s.music.mode=Mode::minor;s.music.bars=4;s.bpm=64;s.patch=makeTone(7);s.music.evolve=true;s.music.evolveTarget=2;s.music.variation=.55f;s.music.evolveBars=4;break;
-        case 7: s.music.mode=Mode::minor;s.music.bars=4;s.music.spacing=1;s.bpm=70;s.patch=makeTone(8);s.music.evolve=true;s.music.evolveTarget=2;s.music.variation=.45f;s.music.evolveBars=4;break;
+        case 0: s.music.bars=4;s.music.composition=Composition::still;s.bpm=72;s.patch=makeTone(0);
+            s.patch.attack=3.2f;s.patch.release=4.2f;s.patch.brightness=.24f;s.patch.space=.62f;s.patch.level=.64f;s.patch.highpass=150;
+            s.detail={.62f,.2f,.52f,.12f,.22f,true,0x534c4f57u,MelodyVoice::airFlute,.08f};break;
+        case 1: s.music.key=7;s.music.mode=Mode::major;s.music.bars=4;s.music.composition=Composition::still;s.bpm=78;s.patch=makeTone(6);
+            s.patch.attack=2.6f;s.patch.release=4.8f;s.patch.brightness=.23f;s.patch.texture=.22f;s.patch.space=.66f;s.patch.chorus=.18f;s.patch.level=.66f;
+            s.detail={.52f,.24f,.63f,.08f,.32f,true,0x474c4153u,MelodyVoice::feltObject,.1f};break;
+        case 2: s.music.complexity=2;s.music.rootless=true;s.bpm=82;s.patch=makeTone(5);
+            s.patch.attack=.045f;s.patch.release=1.1f;s.patch.brightness=.29f;s.patch.texture=.16f;s.patch.space=.28f;s.patch.level=.64f;
+            s.detail={.68f,.18f,.48f,.12f,.16f,true,0x53554e44u,MelodyVoice::feltKeys};s.detail.style=PhraseStyle::lyrical;break;
+        case 3: s.music.key=9;s.music.mode=Mode::minor;s.music.complexity=2;s.music.bars=2;s.music.rootless=true;s.bpm=76;s.patch=makeTone(1);
+            s.patch.attack=.32f;s.patch.release=1.8f;s.patch.brightness=.22f;s.patch.chorus=.28f;s.patch.space=.38f;s.patch.level=.61f;
+            s.detail={.62f,.22f,.48f,.2f,.24f,true,0x56454c56u,MelodyVoice::softSine};s.detail.style=PhraseStyle::lyrical;break;
+        case 4: s.music.mode=Mode::mixolydian;s.music.rhythm=Rhythm::syncopated;s.music.rootless=true;s.bpm=104;s.patch=makeTone(2);
+            s.patch.release=.22f;s.patch.space=.12f;s.patch.level=.68f;
+            s.detail={.82f,.14f,.36f,.08f,.08f,true,0x504f434bu,MelodyVoice::feltKeys};s.detail.style=PhraseStyle::pocket;break;
+        case 5: s.music.key=7;s.music.rhythm=Rhythm::syncopated;s.music.rootless=true;s.music.complexity=2;s.bpm=110;s.patch=makeTone(4);
+            s.patch.brightness=.4f;s.patch.release=.28f;s.patch.space=.18f;s.patch.level=.72f;
+            s.detail={.78f,.2f,.4f,.16f,.12f,true,0x4f464642u,MelodyVoice::softSine};s.detail.style=PhraseStyle::pocket;break;
+        case 6: s.music.mode=Mode::minor;s.music.bars=4;s.music.composition=Composition::uneasy;s.bpm=64;s.patch=makeTone(7);
+            s.patch.attack=3.4f;s.patch.release=5.2f;s.patch.brightness=.12f;s.patch.texture=.38f;s.patch.space=.7f;s.patch.drive=.08f;s.patch.level=.64f;
+            s.detail={.58f,.18f,.58f,.24f,.24f,true,0x41534852u,MelodyVoice::bowedWire,.48f};break;
+        case 7: s.music.key=5;s.music.mode=Mode::minor;s.music.bars=4;s.music.spacing=1;s.music.composition=Composition::uneasy;s.bpm=70;s.patch=makeTone(8);
+            s.patch.attack=2.8f;s.patch.release=4.6f;s.patch.brightness=.16f;s.patch.resonance=.22f;s.patch.space=.64f;s.patch.level=.59f;
+            s.detail={.56f,.3f,.55f,.32f,.3f,true,0x46524143u,MelodyVoice::feltObject,.34f};break;
         case 8: s.music.key=5;s.music.mode=Mode::major;s.music.bars=2;s.bpm=82;s.patch=makeTone(3);
-            s.patch.attack=.5f;s.patch.brightness=.28f;s.patch.chorus=.38f;s.patch.space=.37f;s.patch.level=.65f;
-            s.detail={.45f,.62f,.62f,.55f,.48f,true,0x63726565u};
-            s.music.evolve=true;s.music.evolveTarget=2;s.music.variation=.2f;s.music.evolveBars=8;break;
+            s.patch.attack=.8f;s.patch.brightness=.24f;s.patch.chorus=.3f;s.patch.space=.4f;s.patch.level=.65f;
+            s.detail={.48f,.27f,.52f,.42f,.3f,true,0x63726565u,MelodyVoice::feltKeys};s.detail.style=PhraseStyle::lyrical;break;
         case 9: s.music.key=2;s.music.mode=Mode::minor;s.music.bars=2;s.bpm=76;s.patch=makeTone(1);
-            s.patch.attack=.9f;s.patch.brightness=.19f;s.patch.space=.48f;s.patch.level=.65f;
-            s.detail={.4f,.48f,.54f,.7f,.66f,true,0x74726566u};
-            s.music.evolve=true;s.music.evolveTarget=2;s.music.variation=.25f;s.music.evolveBars=8;break;
+            s.patch.attack=1.3f;s.patch.brightness=.17f;s.patch.space=.48f;s.patch.level=.65f;
+            s.detail={.45f,.22f,.48f,.52f,.38f,true,0x74726566u,MelodyVoice::airFlute};s.detail.style=PhraseStyle::lyrical;break;
         case 10:s.music.key=2;s.music.mode=Mode::minor;s.music.bars=4;s.music.composition=Composition::still;s.bpm=68;s.patch=makeTone(6);
             s.patch.attack=3.8f;s.patch.brightness=.13f;s.patch.texture=.12f;s.patch.space=.7f;s.patch.chorus=.08f;s.patch.level=.7f;s.patch.highpass=130;
             s.detail={.48f,.28f,.78f,.18f,.25f,true,0x51554945u,MelodyVoice::feltObject,.24f};
@@ -241,8 +255,16 @@ Session makePreset(int index, uint32_t seed) {
             s.detail={.56f,.38f,.7f,.32f,.35f,true,0x4641554cu,MelodyVoice::bowedWire,.72f};
             s.music.evolve=true;s.music.evolveTarget=2;s.music.variation=.2f;s.music.evolveBars=16;break;
     }
+    if(s.preset<10){
+        s.music.evolve=true;s.music.evolveTarget=2;s.music.variation=s.preset>=6?.16f:.1f;s.music.evolveBars=16;
+    }
     s.phrase=generate(s.music,{},s.seed);
-    if(s.preset==8||s.preset==9){const int degrees[]{0,5,3,4};for(int i=0;i<4;++i)s.phrase.chords[i]=voice(s.music,degrees[i],s.phrase.chords[(i+3)%4]);}
+    if((s.preset>=2&&s.preset<=5)||s.preset==8||s.preset==9){
+        // Designed loops, voiced through the return as well as each forward transition.
+        static constexpr int progressions[6][4]={{0,3,1,4},{0,5,3,4},{0,0,3,4},{0,3,0,6},{0,5,3,4},{0,5,3,4}};
+        const auto& degrees=progressions[s.preset>=8?s.preset-4:s.preset-2];
+        for(int pass=0;pass<2;++pass)for(int i=0;i<4;++i)s.phrase.chords[i]=voice(s.music,degrees[i],s.phrase.chords[(i+3)%4]);
+    }
     if(s.preset==9){s.percussion.density=.55f;s.percussion.glitch=.5f;s.percussion.color=.3f;s.percussion.seed=0x53484144u;}
     s.detail.figureSeed=s.detail.seed;
     s.detail.phrasing=true;
@@ -266,6 +288,7 @@ static bool validState(const MusicalState& s) noexcept {
     for(float v:{p.brightness,p.motion,p.space,p.level,p.drive,p.chorus,p.texture,p.resonance,p.sustain,p.filterEnv}) if(!range(v,0,1)) return false;
     if(!range(p.decay,.05f,8))return false;
     for(float value:{s.detail.bed,s.detail.broken,s.detail.motif,s.detail.wear,s.detail.echo})if(!range(value,0,1))return false;
+    if(int(s.detail.style)<0||int(s.detail.style)>2)return false;
     if(int(s.detail.voice)<0||int(s.detail.voice)>5||int(m.composition)<0||int(m.composition)>2||!range(s.detail.surface,0,1))return false;
     if(!range(s.percussion.level,0,2)||!range(s.detail.room,0,1)||int(s.detail.motifMode)<0||int(s.detail.motifMode)>2)return false;
     for(float value:{s.percussion.density,s.percussion.glitch,s.percussion.color})if(!range(value,0,1))return false;

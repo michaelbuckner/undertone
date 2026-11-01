@@ -16,7 +16,13 @@ float Engine::Delay::tick(float input,float feedback) noexcept {
     data[pos]=input+damp*feedback; pos=(pos+1)%data.size(); return out;
 }
 void Engine::Delay::clear() noexcept { std::fill(data.begin(),data.end(),0.0f); pos=0; damp=0; }
-Engine::Engine() { current=makePreset(0); next=current; previous=current; smoothed=current.patch; }
+Engine::Engine() {
+    // Stable bootstrap: factory-bank edits must not change the smoothing ramp of
+    // an unrelated session loaded immediately after prepare (including exports).
+    current.music.bars=2;current.patch.attack=1.2f;current.patch.space=.55f;
+    current.phrase=generate(current.music,{},current.seed);current.detail.phrasing=true;
+    next=current;previous=current;smoothed=current.patch;
+}
 void Engine::prepare(double sampleRate) {
     rate=sampleRate; stop(true); clockAge=0; lastMidi=-1; renderedSamples=lastOnsetSample=0;
     needsStart=true; clockRunning=false; clock=external?ClockState::waiting:ClockState::internal;

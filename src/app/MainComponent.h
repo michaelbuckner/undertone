@@ -16,6 +16,9 @@ public:
     bool keyPressed(const juce::KeyPress&) override;
     void smokeTest(const juce::File& directory);
     int preferredHeight() const noexcept {return 850;}
+    std::function<void()> onViewSizeChanged;
+    std::function<void(int)> onInterfaceScaleChanged;
+    void setInterfaceScaleChoice(int choice,float actual);
 private:
     struct Theme : juce::LookAndFeel_V4 {
         Theme();
@@ -98,8 +101,8 @@ private:
     juce::Label detailHeading, detailHint;
     juce::ToggleButton breathe{"Let layers come and go"};
     juce::TextButton newMotif{"New motif"};
-    juce::ComboBox melodyVoice;
-    juce::Label melodyVoiceLabel;
+    juce::ComboBox melodyVoice,phraseStyle;
+    juce::Label melodyVoiceLabel,phraseStyleLabel;
     juce::ToggleButton percussionEnabled{"Percussion"};
     juce::TextButton newBeat{"New pattern"};
     std::array<juce::Slider,4> percussionControls;
@@ -115,6 +118,7 @@ private:
     std::array<juce::Label,10> advancedLabels;
     std::array<juce::Label,8> labels;
     juce::Label transportLabel, messageLabel, clockHint;
+    juce::ComboBox interfaceScaleChoice;
     bool send(Action,int value=0);
     void dispatch(const Command&);
     void changeMusic();

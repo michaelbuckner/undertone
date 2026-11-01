@@ -16,7 +16,7 @@ int main(int argc,char** argv){
     const int playFrames=int(std::llround(seconds*rate)),frames=playFrames+tail*rate;
     Engine engine;engine.prepare(rate);Command c;c.action=Action::load;c.session=makePreset(preset);
     if(argc>4){const int percussion=std::atoi(argv[4]);c.session.percussion.enabled=percussion!=0;if(percussion==2)c.session.detail={0,0,0,0,0,false,1};}
-    if(argc>5)c.session.detail.voice=MelodyVoice(std::clamp(std::atoi(argv[5]),0,5));
+    if(argc>5&&std::atoi(argv[5])>=0)c.session.detail.voice=MelodyVoice(std::clamp(std::atoi(argv[5]),0,5));
     if(argc>8)c.session.cycles={true,true,8,4};
     // Optional reproducible v0.8 comparisons: 0=statement, 1=variation, 2=new, 3=A/B.
     if(argc>9){const int study=std::atoi(argv[9]);c.session.cycles={};c.session.music.evolve=false;c.session.detail.breathe=false;

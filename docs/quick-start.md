@@ -37,3 +37,8 @@ Incoming timestamps are preserved and mapped within each audio block. The MIDI b
 If no audio device is active, open Audio settings to select one. If you lose external clock, the app stops scheduling notes after 500 ms, releases existing notes, and displays Clock Lost. Reconnect and restart the leader. MIDI input errors and control conflicts are shown in the bottom status line. The window scrolls on smaller displays so controls remain reachable.
 
 **First jam to try.** Choose Neo-soul / Sunday, D Dorian, four chords, one bar per chord, and about 88 BPM. Generate until a phrase suggests a bass line, then lock it. Try Omit root before locking if you want to supply all the roots yourself. A useful next feedback pass is whether this stays enjoyable for twenty minutes, and which controls you reach for while holding the bass.
+
+
+**Interface size (v0.12).** Auto chooses 100-200% from the usable display area, after Windows/macOS display scaling. The footer shows the effective scale. Choose a fixed percentage there if desired; it is remembered independently of sessions. Small windows scroll rather than shrinking the controls. Auto follows the window to another display.
+
+**Refreshed starting points.** Ambient and Dark ambient now use sparse Still/Uneasy forms. Neo-soul and Memory use Lyrical phrasing; Funk uses Pocket. In Sound > Layers, Phrase style changes the Song arrangement: Classic keeps the previous behavior, Lyrical uses lower, spaced phrases, and Pocket uses short offbeat gestures. Enable Statement / answer phrasing on Performance for the new five-note phrase patterns. Let layers come and go enables the form. Studies remains unchanged. Existing saved sessions keep their realized settings and default to Classic when loaded from older formats.

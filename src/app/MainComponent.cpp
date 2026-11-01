@@ -51,6 +51,9 @@ void MainComponent::ChordButton::paintButton(juce::Graphics& g,bool over,bool do
 }
 MainComponent::MainComponent() {
     setLookAndFeel(&theme);setWantsKeyboardFocus(true);setSize(1120,1502);
+    addAndMakeVisible(interfaceScaleChoice);interfaceScaleChoice.setName("Interface scale");interfaceScaleChoice.setTitle("Interface scale");
+    interfaceScaleChoice.addItem("Auto",1);for(int i=0;i<5;++i)interfaceScaleChoice.addItem(juce::String(100+i*25)+"%",i+2);
+    interfaceScaleChoice.onChange=[this]{if(onInterfaceScaleChanged)onInterfaceScaleChanged(interfaceScaleChoice.getSelectedId()-1);};
     addAndMakeVisible(transportLabel);addAndMakeVisible(messageLabel);addAndMakeVisible(clockHint);
     addAndMakeVisible(browserTab);addAndMakeVisible(documentLabel);documentLabel.setFont(font(11));browserTab.getProperties().set("tab",true);browserTab.onClick=[this]{showBrowser();};
     transportLabel.setFont(font(11,true));transportLabel.setJustificationType(juce::Justification::centredRight);
@@ -125,6 +128,11 @@ MainComponent::MainComponent() {
     melodyVoiceLabel.setText("MELODY VOICE",juce::dontSendNotification);melodyVoiceLabel.setFont(font(11,true));
     for(int i=0;i<6;++i)melodyVoice.addItem(melodyVoiceName(i),i+1);
     melodyVoice.setTooltip("Changes the melody timbre on new notes. Existing notes finish with their original voice. Chords and broken chords keep their sound.");
+    addAndMakeVisible(phraseStyle);addAndMakeVisible(phraseStyleLabel);phraseStyle.setName("Phrase style");phraseStyle.setTitle("Phrase style");
+    phraseStyleLabel.setText("PHRASE STYLE",juce::dontSendNotification);phraseStyleLabel.setFont(font(11,true));
+    phraseStyle.addItemList({"Classic","Lyrical","Pocket"},1);
+    phraseStyle.setTooltip("Song phrasing: Lyrical lowers the lead and spaces replies; Pocket adds shorter offbeat gestures. Still and Uneasy keep their sparse phrasing.");
+    phraseStyle.onChange=[this]{if(!refreshing)changeDetail();};
     melodyVoice.onChange=[this]{if(!refreshing)changeDetail();};
     addAndMakeVisible(composition);addAndMakeVisible(compositionLabel);addAndMakeVisible(formLabel);
     composition.setName("Composition");composition.setTitle("Composition");compositionLabel.setText("COMPOSITION",juce::dontSendNotification);compositionLabel.setFont(font(11,true));
@@ -289,7 +297,7 @@ void MainComponent::changeDetail(){
     auto& d=editing.detail;d.bed=float(detailControls[0].getValue());d.broken=float(detailControls[1].getValue());
     d.motif=float(detailControls[2].getValue());d.wear=float(detailControls[3].getValue());d.echo=float(detailControls[4].getValue());
     d.surface=float(detailControls[5].getValue());
-    d.breathe=breathe.getToggleState();d.voice=MelodyVoice(melodyVoice.getSelectedId()-1);send(Action::detail);
+    d.style=PhraseStyle(phraseStyle.getSelectedId()-1);d.breathe=breathe.getToggleState();d.voice=MelodyVoice(melodyVoice.getSelectedId()-1);send(Action::detail);
 }
 void MainComponent::changePercussion(){
     auto& p=editing.percussion;p.enabled=percussionEnabled.getToggleState();p.level=float(percussionControls[0].getValue());
@@ -303,9 +311,15 @@ void MainComponent::changeCycles(){
 void MainComponent::changeScenes(){
     editing.sceneCycle=sceneCycle.getToggleState();editing.sceneBars=sceneInterval.getSelectedId();editing.sceneVariations=sceneVariations.getToggleState();send(Action::sceneControls);
 }
+void MainComponent::setInterfaceScaleChoice(int choice,float actual){
+    interfaceScaleChoice.changeItemText(1,choice==0?"Auto / "+juce::String(int(actual*100))+"%":"Auto");
+    interfaceScaleChoice.setSelectedId(choice+1,juce::dontSendNotification);
+    interfaceScaleChoice.setTooltip("Interface size. Auto follows the display containing this window. Manual sizes are remembered.");
+}
 void MainComponent::setPerformanceView(bool value){
     browserView=false;performanceView=value;
-    if(auto* viewport=findParentComponentOfClass<juce::Viewport>()){viewport->setViewPosition(0,0);setSize(getWidth(),std::max(preferredHeight(),viewport->getHeight()-16));}
+    if(onViewSizeChanged)onViewSizeChanged();
+    else if(auto* viewport=findParentComponentOfClass<juce::Viewport>()){viewport->setViewPosition(0,0);setSize(getWidth(),std::max(preferredHeight(),viewport->getHeight()-16));}
     else setSize(getWidth(),preferredHeight());
     resized();repaint();
 }
@@ -365,6 +379,7 @@ void MainComponent::showSession(const Session& s){
     compositionCycle.setToggleState(s.cycles.composition,juce::dontSendNotification);motifCycle.setToggleState(s.cycles.motif,juce::dontSendNotification);
     compositionInterval.setSelectedId(s.cycles.compositionBars,juce::dontSendNotification);motifInterval.setSelectedId(s.cycles.motifBars,juce::dontSendNotification);
     breathe.setToggleState(s.detail.breathe,juce::dontSendNotification);
+    phraseStyle.setSelectedId(int(s.detail.style)+1,juce::dontSendNotification);phraseStyle.setEnabled(s.music.composition==Composition::song);
     melodyVoice.setSelectedId(int(s.detail.voice)+1,juce::dontSendNotification);
     percussionEnabled.setToggleState(s.percussion.enabled,juce::dontSendNotification);
     const double percussionValues[]{s.percussion.level,s.percussion.density,s.percussion.glitch,s.percussion.color};
@@ -472,7 +487,7 @@ void MainComponent::timerCallback(){
         juce::String("Composition: ")+(cycles.composition?(em.composition==Composition::song?juce::String("paused in Song"):juce::String(shown.compositionBeats/4,1)+" bars to switch"):juce::String("off"))+
         "  |  Motif: "+(shown.session.detail.motifMode==MotifMode::hold?juce::String("held"):cycles.motif?juce::String(shown.motifBeats/4,1)+" bars to change":juce::String("off"));
     cycleHint.setText(cycleText,juce::dontSendNotification);
-    formLabel.setText(em.composition==Composition::song?"":shown.session.detail.breathe?juce::String("32-BAR FORM / ")+sectionName(shown.section):"FORM OFF / STEADY LAYER BALANCE",juce::dontSendNotification);
+    formLabel.setText(em.composition==Composition::song?(shown.session.detail.style!=PhraseStyle::classic&&shown.session.detail.breathe?"16-BAR FORM / CALL AND RESPONSE":""):shown.session.detail.breathe?juce::String("32-BAR FORM / ")+sectionName(shown.section):"FORM OFF / STEADY LAYER BALANCE",juce::dontSendNotification);
     bool allLocked=true;for(int i=0;i<em.slots;++i)allLocked&=shown.session.phrase.chords[i].locked;
     juce::String evolutionText=!em.evolve?"Evolve is off.":em.variation==0?"Evolve paused: Variation is zero.":!shown.playing?"Evolve is ready; press Play or send MIDI Start.":
         (em.evolveTarget==1&&allLocked)?"No chord changes: every chord is locked.":
@@ -544,7 +559,7 @@ void MainComponent::paint(juce::Graphics& g){
 }
 void MainComponent::resized(){
     const int w=getWidth();int x=28;
-    transportLabel.setBounds(660,26,w-690,25);messageLabel.setBounds(28,getHeight()-46,w-210,39);
+    transportLabel.setBounds(660,26,w-690,25);messageLabel.setBounds(28,getHeight()-46,w-400,39);
     for(auto* b:{&play,&stop,&panic,&generateButton,&lockAll,&undo}){const int width=b==&play?132:b==&generateButton?112:b==&lockAll?120:76;b->setBounds(x,95,width,34);x+=width+8;}
     save.setBounds(w-193,95,75,34);load.setBounds(w-110,95,80,34);
     // Separate the captions from transport above and their fields below.
@@ -599,6 +614,7 @@ void MainComponent::resized(){
         browser->setVisible(true);browser->setBounds(20,149,w-40,getHeight()-210);
     }
     browserTab.setVisible(true);browserTab.setBounds(550,30,94,32);browserTab.setToggleState(browserView,juce::dontSendNotification);
+    interfaceScaleChoice.setVisible(true);interfaceScaleChoice.setBounds(w-355,getHeight()-43,185,30);
     documentLabel.setVisible(true);documentLabel.setBounds(340,65,w-525,17);
 }
 void MainComponent::smokeTest(const juce::File& directory){
@@ -612,8 +628,14 @@ void MainComponent::smokeTest(const juce::File& directory){
     if(auto stream=directory.getChildFile("window.png").createOutputStream()){
         if(stream->setPosition(0)&&stream->truncate().wasOk())png.writeImageToStream(image,*stream);
     }
+    auto captureViewport=[&](const juce::String& name){if(auto* viewport=findParentComponentOfClass<juce::Viewport>()){
+        if(auto stream=directory.getChildFile(name).createOutputStream())if(stream->setPosition(0)&&stream->truncate().wasOk())
+            png.writeImageToStream(viewport->createComponentSnapshot(viewport->getLocalBounds()),*stream);
+    }};
+    captureViewport("scaled-performance.png");
     saveSession(directory.getChildFile("smoke.undertone"),shown.session);
     juce::String report="Native UI instantiated; "+juce::String(getWidth())+"x"+juce::String(getHeight())+"\n";
+    report+="Interface: "+interfaceScaleChoice.getText()+" / transform "+juce::String(getTransform().getScaleFactor())+"\n";
     report+="Chord controls: "+swapButtons[0].getBounds().toString()+" / "+restButtons[0].getBounds().toString()+" / "+compareButtons[0].getBounds().toString()+"\n";
     if(auto* device=devices.getCurrentAudioDevice())report+="Audio: "+device->getName()+" / "+juce::String(device->getCurrentSampleRate())+" Hz / "+juce::String(device->getCurrentBufferSizeSamples())+" samples\n";
     else report+="No active audio device\n";
@@ -627,12 +649,14 @@ void MainComponent::smokeTest(const juce::File& directory){
     for(int size=0;size<2;++size){
         if(size==1)setSize(1080,850);
         for(int page=0;page<6;++page){selectSoundPage(page);
+            if(size==0)captureViewport(juce::String("scaled-")+pageFiles[page]);
             const auto name=juce::String(size==1?"minimum-":"")+pageFiles[page];
             if(auto stream=directory.getChildFile(name).createOutputStream()){
                 if(stream->setPosition(0)&&stream->truncate().wasOk())png.writeImageToStream(createComponentSnapshot(getLocalBounds()),*stream);
             }
         }
         showBrowser();
+        if(size==0)captureViewport("scaled-library.png");
         if(auto stream=directory.getChildFile(size==1?"minimum-library.png":"library.png").createOutputStream()){
             if(stream->setPosition(0)&&stream->truncate().wasOk())png.writeImageToStream(createComponentSnapshot(getLocalBounds()),*stream);
         }
@@ -641,6 +665,9 @@ void MainComponent::smokeTest(const juce::File& directory){
     setSize(originalWidth,originalHeight);
     selectSoundPage(previousPage);setPerformanceView(previousView);
     report+="Sound navigation preserves session and sends no engine commands: "+juce::String(beforeNavigation==encodeSession(editing)&&beforeSequence==sentSequence?"PASS":"FAIL")+"\n";
+    if(auto* viewport=findParentComponentOfClass<juce::Viewport>()){
+        viewport->setViewPositionProportionately(1,1);captureViewport("scaled-bottom-right.png");viewport->setViewPosition(0,0);
+    }
     directory.getChildFile("smoke.txt").replaceWithText(report);
 }
 }

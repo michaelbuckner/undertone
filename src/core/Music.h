@@ -11,6 +11,7 @@ enum class ToneModel { warm, ladder, dco, fm };
 enum class MelodyVoice { original, softSine, feltKeys, airFlute, feltObject, bowedWire };
 enum class Composition { song, still, uneasy };
 enum class MotifMode { hold, vary, fresh };
+enum class PhraseStyle { classic, lyrical, pocket };
 enum class SwapStyle { nearby, tension, surprise };
 const char* compositionName(int);
 const char* melodyVoiceName(int);
@@ -49,6 +50,7 @@ struct Detail {
     MotifMode motifMode=MotifMode::fresh;
     uint32_t variationSeed=0,figureSeed=0x4d4f5449u;
     float room=0; // Give me space: deterministic thinning and longer breaths.
+    PhraseStyle style=PhraseStyle::classic; // Explicit opt-in; imported sessions keep their arrangement.
 };
 struct Percussion {
     bool enabled=false;

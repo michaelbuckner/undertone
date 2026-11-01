@@ -9,7 +9,7 @@ void load(Engine& e,const Session& s){Command c;c.action=Action::load;c.session=
 int melody(const Session& s,int step){const auto events=detailStep(s,step);for(int i=0;i<events.count;++i)if(events.events[i].role==1)return events.events[i].note;return -1;}
 int main(){
     int variations=0,spaceReduction=0;
-    for(int seed=1;seed<=24;++seed){auto s=makePreset(8);s.detail.seed=seed;s.detail.breathe=false;auto changed=s;
+    for(int seed=1;seed<=24;++seed){auto s=makePreset(8);s.detail.style=PhraseStyle::classic;s.detail.seed=seed;s.detail.breathe=false;auto changed=s;
         changed.detail.motifMode=MotifMode::vary;advanceMotif(changed.detail);
         check(changed.detail.seed==s.detail.seed&&changed.detail.figureSeed==s.detail.figureSeed,"Vary preserves motif and figure identity");
         for(int step:{0,3,8})check(melody(s,step)==melody(changed,step),"Vary preserves opening pitches under the same harmony");

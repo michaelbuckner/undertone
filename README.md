@@ -1,6 +1,6 @@
 **Undertone — generative chords and pads**
 
-Native software prototype v0.11.1 · November 1, 2026 · Owner: Mike
+Native software prototype v0.12.0 · November 1, 2026 · Owner: Mike
 
 A personal instrument that generates chords and pads for bass practice, jams with Elektron beats, and darker electronic composition. The first Windows application is implemented and locally tested. macOS uses the same C++/JUCE source. The initial GitHub CI run built its universal package and passed native and Rosetta tests; interactive Mac audio/UI verification is still pending.
 
@@ -15,6 +15,7 @@ A personal instrument that generates chords and pads for bass practice, jams wit
 - [Studio interface](docs/ui-0.9.md): visual direction, native control polish and remaining product-design work.
 - [Focused Sound editor](docs/sound-editor-0.10.md): six compact sections, engine-aware controls and shared Performance settings.
 - [Preset and session library](docs/library-0.11.md): search, saved variations, recent files and edited-state protection.
+- [Display scaling and refreshed presets](docs/presets-and-scale-0.12.md): automatic interface size, Lyrical/Pocket arrangements and a revised starting bank.
 - [Build status](docs/build-status.md): verified behavior, known limitations, and the remaining PRD release gates.
 - [Third-party dependency](docs/third-party.md): pinned JUCE source and distribution notes.
 - [Apple silicon verification](docs/mac-verification.md): run the prepared Mac build and collect actual test/launch evidence.

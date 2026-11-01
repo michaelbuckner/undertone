@@ -3,7 +3,7 @@ namespace undertone {
 static juce::String encodeSessionInternal(const Session& s,bool bank) {
     auto* object=new juce::DynamicObject(); juce::var root(object);
     auto set=[&](const char* key,juce::var value){object->setProperty(key,value);};
-    set("format","undertone-session");set("schema",8);set("generator",s.generatorVersion);
+    set("format","undertone-session");set("schema",9);set("generator",s.generatorVersion);
     if(bank){
         set("activeScene",s.activeScene);set("sceneCycle",s.sceneCycle);set("sceneBars",s.sceneBars);set("sceneVariations",s.sceneVariations);
         set("sceneVariationSeed",juce::int64(s.sceneVariationSeed));set("swapStyle",int(s.swapStyle));
@@ -31,6 +31,7 @@ static juce::String encodeSessionInternal(const Session& s,bool bank) {
     set("breathe",d.breathe);set("motifSeed",juce::int64(d.seed));
     set("melodyVoice",int(d.voice));
     set("phrasing",d.phrasing);set("motifMode",int(d.motifMode));set("motifVariation",juce::int64(d.variationSeed));
+    set("phraseStyle",int(d.style));
     set("figureSeed",juce::int64(d.figureSeed));set("room",d.room);
     const auto& percussion=s.percussion;set("percussionEnabled",percussion.enabled);set("percussionLevel",percussion.level);
     set("percussionDensity",percussion.density);set("percussionGlitch",percussion.glitch);set("percussionColor",percussion.color);set("percussionSeed",juce::int64(percussion.seed));
@@ -52,7 +53,7 @@ static juce::Result decodeSessionInternal(const juce::String& text,Session& dest
     if(parsed.failed()||!root.isObject())return juce::Result::fail("Not a valid session JSON object.");
     const auto required={"format","schema","generator","seed","bpm","preset","key","mode","slots","bars","complexity","floor","spacing","rootless","evolve","variation","rhythm","brightness","motion","space","level","attack","release","drive","chorus","highpass","detune","chords"};
     for(const auto* k:required)if(!root.hasProperty(k))return juce::Result::fail(juce::String("Missing field: ")+k);
-    if(root["format"].toString()!="undertone-session"||(int(root["schema"])<1||int(root["schema"])>8)||int(root["generator"])!=1)
+    if(root["format"].toString()!="undertone-session"||(int(root["schema"])<1||int(root["schema"])>9)||int(root["generator"])!=1)
         return juce::Result::fail("Unsupported session or generator version. The original file was not changed.");
     for(const auto* k:required) {
         if(juce::String(k)=="format"||juce::String(k)=="chords")continue;
@@ -150,12 +151,16 @@ static juce::Result decodeSessionInternal(const juce::String& text,Session& dest
             s.sceneVariationSeed=uint32_t(juce::int64(seed));s.swapStyle=SwapStyle(int(root["swapStyle"]));
             const auto* scenes=root["scenes"].getArray();if(!scenes||scenes->size()!=2)return juce::Result::fail("Expected two scene slots.");
             for(int i=0;i<2;++i){const auto& value=(*scenes)[i];if(value.isVoid())continue;
-                if(!value.isObject()||int(value["schema"])!=8||value.hasProperty("scenes"))return juce::Result::fail("Invalid nested scene.");
+                if(!value.isObject()||(int(value["schema"])<8||int(value["schema"])>9)||value.hasProperty("scenes"))return juce::Result::fail("Invalid nested scene.");
                 Session state;const auto result=decodeSessionInternal(juce::JSON::toString(value),state,1);if(result.failed())return result;
                 s.scenes[i]={true,static_cast<const MusicalState&>(state)};
             }
         }else if(root.hasProperty("scenes"))return juce::Result::fail("Nested scene banks are not supported.");
     }else {s.detail.figureSeed=s.detail.seed;s.detail.phrasing=false;}
+    if(int(root["schema"])>=9){
+        if(!root["phraseStyle"].isInt()||int(root["phraseStyle"])<0||int(root["phraseStyle"])>2)return juce::Result::fail("Invalid phrase style.");
+        s.detail.style=PhraseStyle(int(root["phraseStyle"]));
+    }
     if(!valid(s))return juce::Result::fail("Session contains out-of-range settings or invalid voicings.");
     destination=s;return juce::Result::ok();
 }

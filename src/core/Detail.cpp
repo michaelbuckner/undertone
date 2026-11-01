@@ -28,6 +28,12 @@ int motifIndex(const Session& s,int64_t step) noexcept {
     }
     if(s.detail.phrasing&&s.music.composition==Composition::song){
         if(s.detail.breathe&&(step/8)%16>=12)return -1;
+        if(s.detail.style!=PhraseStyle::classic){
+            static constexpr int lyrical[]{0,5,12,18,24},pocket[]{3,6,12,19,22};
+            const auto* rhythm=s.detail.style==PhraseStyle::pocket?pocket:lyrical;
+            for(int i=0;i<5;++i)if(step%32==rhythm[i])return i;
+            return -1;
+        }
         static constexpr int phrase[]{0,3,8,14,18,22};
         for(int i=0;i<6;++i)if(step%32==phrase[i])return i;
         return -1;
@@ -53,7 +59,7 @@ int desiredNote(const Session& s,int64_t step,int index) noexcept {
         if(answer&&index>=3)degree=index>=4?0:(degree+5)%7;
         // Variations leave the opening gesture intact and develop the answer/ending.
         if(s.detail.variationSeed&&index>=3&&!(answer&&index>=4))degree=(degree+1+hash(s.detail.variationSeed+uint32_t(index))%2)%7;
-        return fit(s.music.key+scale(s.music.mode)[degree]+(s.music.composition==Composition::song?72:60),s.music.floor+(s.music.composition==Composition::song?7:3));
+        return fit(s.music.key+scale(s.music.mode)[degree]+(s.music.composition==Composition::song&&s.detail.style==PhraseStyle::classic?72:60),s.music.floor+(s.music.composition==Composition::song&&s.detail.style==PhraseStyle::classic?7:3));
     }
     if(s.music.composition!=Composition::song){
         static constexpr int cells[4][6]={{0,4,1,0,4,1},{4,0,1,4,0,5},{0,1,4,0,1,5},{4,1,0,4,1,6}};
@@ -75,7 +81,7 @@ Choices choices(const Session& s,const MelodyContext& context,int64_t step,bool 
     else out.target=desiredNote(state,step,index);
     // Accent and phrase-end notes land on harmony. Only weak offbeats may pass between tones.
     const bool anchor=step%2==0||index==7||index==0||(state.detail.phrasing&&index>=4);
-    const int low=state.music.composition==Composition::song?std::max(state.music.floor+7,67):std::max(state.music.floor+3,60),high=std::min(108,low+23);
+    const int low=state.music.composition==Composition::song&&state.detail.style==PhraseStyle::classic?std::max(state.music.floor+7,67):std::max(state.music.floor+3,60),high=std::min(108,low+(state.music.composition!=Composition::song||state.detail.style==PhraseStyle::classic?23:19));
     for(int note=low;note<=high;++note){
         bool inScale=false;for(int pc:scale(state.music.mode))inScale|=(note-state.music.key+120)%12==pc;
         const bool tone=chordContains(chord,note);
@@ -147,12 +153,23 @@ DetailStep detailStep(const Session& s,int64_t step,const MelodyContext& context
         if(hit){const int n=int((step/32+d.figureSeed)%chord.count);
             result.events[result.count++]={fit(chord.notes[n],s.music.floor),0,.43f*frame.figure,.38f,MelodyVoice::feltObject,1.4f};}
     }
-    if(!study&&d.broken>0 && (!d.breathe||bar<8||bar>=12))for(int i=0;i<4;++i)if(pos==hits[pattern][i]&&(d.room<.5f||i==0)){
+    if(!study&&d.style==PhraseStyle::classic&&d.broken>0 && (!d.breathe||bar<8||bar>=12))for(int i=0;i<4;++i)if(pos==hits[pattern][i]&&(d.room<.5f||i==0)){
         const int index=((bar%2)?chord.count-1-(i%chord.count):i%chord.count);
         const int note=fit(chord.notes[index],s.music.floor);
         result.events[result.count++]={note,0,(i==0?.82f:.58f)+float(hash(d.figureSeed+uint32_t(step))%13)*.01f,.28f+.12f*(i%3)};
     }
     const int index=motifIndex(s,step);
+    if(!study&&d.style!=PhraseStyle::classic&&d.broken>0&&frame.figure>0&&(d.motif<=0||index<0)){
+        const bool pocket=d.style==PhraseStyle::pocket;
+        const int place=int(step%16);
+        // A supporting reply, with no simultaneous lead attack. Space only removes notes.
+        const bool hit=pocket?(place==1||place==10):(place==7||place==15);
+        if(hit&&!(d.room>.5f&&place>=8)){
+            const int n=int((step/16+identity)%chord.count);
+            result.events[result.count++]={fit(chord.notes[n],s.music.floor),0,.58f*frame.figure,.4f,
+                MelodyVoice::feltObject,pocket?.65f:1.4f};
+        }
+    }
     if(d.motif>0&&index>=0){
         const int note=plannedNote(s,context,step);
         if(note<0)return result;
@@ -160,7 +177,8 @@ DetailStep detailStep(const Session& s,int64_t step,const MelodyContext& context
         for(int offset=1;offset<=32;++offset)if(!chordContains(atChord(s,context,step+offset),note)){
             gate=std::max(.125f,offset*.5f-.125f);break;
         }
-        const float velocity=study?(index==0?.9f:index==1?.58f:index==2?.42f:.68f)*frame.melody:(index==0?.84f:index==4?.76f:.66f);
+        if(!study&&d.style==PhraseStyle::pocket)gate=std::min(gate,.7f);
+        const float velocity=study?(index==0?.9f:index==1?.58f:index==2?.42f:.68f)*frame.melody:(index==0?.84f:index==4?.76f:.66f)*(d.style==PhraseStyle::classic?1.f:frame.melody);
         result.events[result.count++]={note,1,velocity,study?.47f+.03f*float(hash(d.seed+uint32_t(step/64))%5):.65f,d.voice,gate};
     }
     return result;

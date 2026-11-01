@@ -9,7 +9,7 @@ void render(Engine& engine,int frames){float l[256],r[256];while(frames>0){int n
 int main(){
     for(uint32_t seed=0;seed<10000;++seed)check(nextMotifSeed(seed)%4!=seed%4,"New motif always chooses a different melodic contour");
     for(int key=0;key<12;++key)for(int mode=0;mode<4;++mode)for(int floor:{48,60,84})for(bool rootless:{false,true}){
-        auto s=makePreset(8);s.music.key=key;s.music.mode=Mode(mode);s.music.floor=floor;s.music.rootless=rootless;
+        auto s=makePreset(8);s.detail.style=PhraseStyle::classic;s.music.key=key;s.music.mode=Mode(mode);s.music.floor=floor;s.music.rootless=rootless;
         s.phrase=generate(s.music,{},s.seed);
         for(int step=0;step<128;++step){const auto events=detailStep(s,step);const auto repeat=detailStep(s,step);
             check(events.count<=2&&events.count==repeat.count,"bounded repeatable scheduling");
@@ -23,7 +23,7 @@ int main(){
             }
         }
     }
-    auto s=makePreset(8);s.detail.breathe=false;
+    auto s=makePreset(8);s.detail.style=PhraseStyle::classic;s.detail.breathe=false;
     for(int step:{0,3,8,14,18,22}){
         auto first=detailStep(s,step),answer=detailStep(s,step);
         int a=-1,b=-1;for(int n=0;n<first.count;++n)if(first.events[n].role==1)a=first.events[n].note;

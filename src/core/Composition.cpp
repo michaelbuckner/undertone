@@ -5,7 +5,14 @@ namespace undertone {
 namespace {constexpr double pi=3.14159265358979323846;}
 const char* sectionName(int section) noexcept {static constexpr const char* names[]{"Opening","Statement","Pressure","Withdrawal"};return names[std::clamp(section,0,3)];}
 CompositionFrame compositionFrame(const Session& s,double beat) noexcept {
-    if(s.music.composition==Composition::song)return {1,1,1,1,0};
+    if(s.music.composition==Composition::song){
+        if(s.detail.style==PhraseStyle::classic||!s.detail.breathe)return {1,1,1,1,0};
+        const double bars=std::fmod(std::max(0.,beat)/4,16.);const int section=int(bars/4);
+        const float t=float((1-std::cos(pi*std::fmod(bars,4.)/4))*.5);
+        static constexpr float bed[]{.72f,.86f,1.f,.7f,.72f};
+        return {bed[section]+t*(bed[section+1]-bed[section]),section==0?.45f:section==1?.7f:section==2?.35f:.55f,
+            section==0?.8f:section==1?1.f:section==2?.75f:0.f,1,section};
+    }
     const double bars=std::fmod(std::max(0.,beat)/4,32.);const int section=int(bars/8);
     if(!s.detail.breathe)return {1,1,1,1,section};
     const float t=float((1-std::cos(pi*std::fmod(bars,8.)/8))*.5);

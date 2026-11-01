@@ -10,7 +10,7 @@ DetailEvent melody(const Session& s,int64_t step,const MelodyContext& c={}){
 }
 int main(){
     int passing=0,changedAhead=0,changedQueued=0,seedChanges=0;
-    for(int seed=1;seed<=32;++seed){auto s=makePreset(8,uint32_t(seed));s.detail.breathe=false;s.detail.seed=uint32_t(seed);
+    for(int seed=1;seed<=32;++seed){auto s=makePreset(8,uint32_t(seed));s.detail.style=PhraseStyle::classic;s.detail.breathe=false;s.detail.seed=uint32_t(seed);
         s.music.bars=1;s.music.slots=4;s.music.rootless=seed%2;s.music.floor=seed%3==0?84:60;
         s.phrase=generate(s.music,{},s.seed);MelodyContext c;
         for(int step=0;step<96;++step){auto event=melody(s,step,c);if(event.note<0)continue;

@@ -55,10 +55,10 @@ void MainComponent::layoutSoundEditor(){
         const int size=width/4;dial(advanced[2],advancedLabels[2],left,540,size);dial(advanced[3],advancedLabels[3],left+size,540,size);
         dial(knobs[6],knobLabels[6],left+size*2,540,size);dial(knobs[3],knobLabels[3],left+size*3,540,size);
     }else if(soundPage==3){
-        field(melodyVoice,melodyVoiceLabel,left,551,280);place(breathe,left+310,551,260,30);
-        place(newMotif,left+width-244,551,114,30);place(newFigure,left+width-122,551,122,30);
+        field(melodyVoice,melodyVoiceLabel,left,551,236);field(phraseStyle,phraseStyleLabel,left+252,551,190);place(breathe,left+458,551,width-458,30);
+        place(newMotif,left+width-244,707,114,30);place(newFigure,left+width-122,707,122,30);
         const int size=width/3;for(int i=0;i<6;++i)fader(detailControls[i],detailLabels[i],left+(i%3)*size,596+(i/3)*58,size-18);
-        place(formLabel,left,713,width,18);
+        place(formLabel,left,708,width-260,28);
     }else if(soundPage==4){
         const int size=width/4;for(int i=0;i<4;++i)dial(percussionControls[i],percussionLabels[i],left+i*size,540,size);
         place(newBeat,left,696,136,30);place(percussionHint,left+154,692,width-154,38);

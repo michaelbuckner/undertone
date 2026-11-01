@@ -11,6 +11,14 @@ int main(){
         for(int j=0;j<s.music.slots;++j)expect(sameChord(next.chords[j],replay.chords[j]),"evolution replay mismatch");
     }
     auto original=makePreset(2);auto dest=original;
+    for(int style=0;style<3;++style){auto s=makePreset(2);s.detail.style=PhraseStyle(style);storeScene(s,0);s.detail.style=PhraseStyle((style+1)%3);storeScene(s,1);
+        expect(decodeSession(encodeSession(s),dest).wasOk()&&encodeSession(s)==encodeSession(dest),"phrase style and scene roundtrip");}
+    {auto old=juce::JSON::parse(encodeSession(makePreset(2)));old.getDynamicObject()->setProperty("schema",8);old.getDynamicObject()->removeProperty("phraseStyle");
+        expect(decodeSession(juce::JSON::toString(old),dest).wasOk()&&dest.detail.style==PhraseStyle::classic,"schema 8 keeps classic arrangement");}
+    for(juce::var value:{juce::var(),juce::var(-1),juce::var(3),juce::var(true),juce::var(1.5),juce::var("1"),juce::var(juce::int64(4294967297LL))}){
+        auto bad=juce::JSON::parse(encodeSession(makePreset(2)));bad.getDynamicObject()->setProperty("phraseStyle",value);
+        auto previous=encodeSession(dest);expect(decodeSession(juce::JSON::toString(bad),dest).failed()&&encodeSession(dest)==previous,"invalid style changes destination");}
+
     {auto state=makePreset(10);state.cycles={true,true,64,2};state.phrase.chords[0].rest=true;state.phrase.chords[0].locked=true;
         expect(decodeSession(encodeSession(state),dest).wasOk()&&encodeSession(state)==encodeSession(dest),"cycle/rest roundtrip");
         for(int schema=1;schema<=6;++schema){auto old=juce::JSON::parse(encodeSession(state));old.getDynamicObject()->setProperty("schema",schema);
