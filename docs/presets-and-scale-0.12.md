@@ -46,3 +46,7 @@ These checks establish implementation behavior, not a subjective judgment that e
 The rendered files are generated artifacts under `build/preset-refresh/after`: `preset-0.wav` through `preset-11.wav`, following the table order. Each covers 32 bars at its factory tempo plus a tail, using the actual engine at 48 kHz stereo. Preview gain is a fixed 5×, capped only if necessary for headroom; it is not a change to the application's master gain.
 
 `build/preset-refresh/auditions/preset-sampler.wav` contains twenty-second excerpts from Slow light, Sunday, Pocket, Ash room and Sun-faded, with one-second gaps. Each excerpt starts at bar 9 and receives short boundary fades; no EQ, compression or external sounds are added. The sampler is a quick comparison; the complete renders show the full form.
+
+## v0.12.1: chord symbols for sparse voicings
+
+Chord cards, Now/Next and queued previews now name Still/Uneasy voicings by their actual intervals instead of using “open” or “tension.” For example, a Bb-rooted F–C voicing is Bbsus2 (the root is omitted), and F–C–Db is F5(addb6). A sparse field has no third, so calling it major or minor would imply a note that is not there. Existing Song symbols such as Fmaj9 are retained. Imported fields outside the generated shapes show an explicit root-relative interval list. This changes display text only; notes, sound and session format are unchanged.

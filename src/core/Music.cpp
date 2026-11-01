@@ -198,7 +198,30 @@ std::string chordName(const Chord& c) {
     if(c.rest)return "Rest";
     static constexpr const char* names[]{"C","Db","D","Eb","E","F","Gb","G","Ab","A","Bb","B"};
     std::string name = names[static_cast<size_t>(c.root) % 12];
-    if(c.color)return name+(c.color==1?" open":" tension");
+    if(c.color){
+        // Sparse fields have no third: quality/extension describe the underlying
+        // scale chord, not these notes. Keep the harmonic root for rootless voicings.
+        std::array<bool,12> intervals{};
+        for(int n=0;n<c.count;++n)intervals[(c.notes[n]-c.root+120)%12]=true;
+        const bool field=(intervals[6]!=intervals[7])&&!(intervals[1]&&intervals[2])
+            &&!(intervals[8]&&intervals[9])&&!intervals[3]&&!intervals[4]&&!intervals[5]&&!intervals[10]&&!intervals[11];
+        if(field){
+            name+=intervals[2]?"sus2":intervals[1]?"sus":"5";
+            std::string additions;
+            auto add=[&](const char* text){if(!additions.empty())additions+=",";additions+=text;};
+            if(intervals[1])add("b2");
+            if(intervals[6])add("b5");
+            if(intervals[8])add("addb6");
+            if(intervals[9])add("add6");
+            return name+(additions.empty()?"":"("+additions+")");
+        }
+        // Imported nonstandard fields: show their exact intervals rather than
+        // inventing a major/minor quality or hiding notes behind a mood label.
+        static constexpr const char* degrees[]{"1","b2","2","b3","3","4","b5","5","b6","6","b7","7"};
+        name+=" [";bool first=true;
+        for(int i=0;i<12;++i)if(intervals[i]){if(!first)name+=" ";name+=degrees[i];first=false;}
+        return name+"]";
+    }
     if (c.quality == 1) name += "m";
     if (c.quality == 2) name += c.extension ? "m" : "dim";
     if (c.extension) {

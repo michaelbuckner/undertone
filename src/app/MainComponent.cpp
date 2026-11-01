@@ -43,10 +43,18 @@ void MainComponent::ChordButton::paintButton(juce::Graphics& g,bool over,bool do
     g.drawText(juce::String(number).paddedLeft('0',2),10,6,28,14,juce::Justification::centredLeft);
     if(locked){g.setColour(mint);g.drawRoundedRectangle(float(getWidth()-22),9,8,7,1,1);g.drawRoundedRectangle(float(getWidth()-20),5,4,7,2,1);}
     if(resting){g.setFont(font(10));g.drawText("REST",38,6,getWidth()-48,14,juce::Justification::centredRight);}
-    g.setFont(font(getWidth()<150?18.f:24.f,true));g.setColour(resting?muted:ink);
-    g.drawFittedText(name,10,21,getWidth()-20,27,juce::Justification::centredLeft,1);
+    const int modifier=name.containsChar('(')?name.indexOfChar('('):name.indexOfChar('[');
+    const bool stacked=getWidth()<150&&name.length()>12&&modifier>0;
+    g.setColour(resting?muted:ink);
+    if(stacked){
+        g.setFont(font(16,true));g.drawFittedText(name.substring(0,modifier),10,20,getWidth()-20,16,juce::Justification::centredLeft,1);
+        g.setFont(font(11,true));g.drawFittedText(name.substring(modifier),10,36,getWidth()-20,12,juce::Justification::centredLeft,1);
+    }else{
+        g.setFont(font(getWidth()<150?18.f:24.f,true));
+        g.drawFittedText(name,10,21,getWidth()-20,27,juce::Justification::centredLeft,1);
+    }
     g.setFont(font(10));g.setColour(preview.isNotEmpty()?accent:muted);
-    g.drawFittedText(preview.isNotEmpty()?preview:voicing,10,getHeight()<72?45:51,getWidth()-20,13,juce::Justification::centredLeft,1);
+    g.drawFittedText(preview.isNotEmpty()?preview:voicing,10,stacked?49:getHeight()<72?45:51,getWidth()-20,stacked?11:13,juce::Justification::centredLeft,1);
     if(active){g.setColour(accent);g.fillRoundedRectangle(7.f,float(getHeight()-3),float(getWidth()-14)*progress,2,1);}
 }
 MainComponent::MainComponent() {

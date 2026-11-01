@@ -9,6 +9,27 @@ int checks=0;
 void check(bool condition,const char* message) { ++checks; if(!condition) { std::cerr<<"FAIL: "<<message<<'\n'; std::exit(1); } }
 void render(Engine& e,int samples) { float l[256],r[256]; while(samples>0) { const int n=std::min(256,samples); e.process(l,r,n); samples-=n; } }
 int main() {
+    // Chord symbols must describe the sparse sounding field, not its old mood tag.
+    auto named=[](int root,int color,std::initializer_list<int> notes){Chord c;c.root=root;c.color=color;c.count=int(notes.size());std::copy(notes.begin(),notes.end(),c.notes.begin());return c;};
+    check(chordName(named(10,1,{77,84}))=="Bbsus2","rootless Bb screenshot names the suspended harmony");
+    check(chordName(named(5,2,{65,72,73}))=="F5(addb6)","F tension screenshot names the actual flat-six field");
+    check(chordName(named(2,1,{62,69,76}))=="Dsus2","open D field is suspended, not major or minor");
+    check(chordName(named(5,1,{65,72}))=="F5","third-free dyad is a power chord");
+    check(chordName(named(11,2,{71,77,79,84}))=="Bsus(b2,b5,addb6)","altered field retains every interval");
+    auto major=named(5,0,{72,76,79,81});major.extension=2;
+    check(chordName(major)=="Fmaj9","existing rootless Fmaj9 symbol retained");
+    auto rest=named(5,2,{65,72,73});rest.rest=true;check(chordName(rest)=="Rest","rest slot remains explicit");
+    for(int root=0;root<12;++root)for(int fifth:{6,7})for(int second:{0,1,2})for(int sixth:{0,8,9}){
+        auto c=named(root,1,{60+root,60+root+fifth});
+        if(second)c.notes[c.count++]=60+root+second;
+        if(sixth)c.notes[c.count++]=60+root+sixth;
+        const auto symbol=chordName(c);c.color=2;check(chordName(c)==symbol,"identical fields share a symbol across composition styles");
+        for(int i=0;i<c.count;++i)c.notes[i]+=12;
+        check(chordName(c)==symbol,"symbol independent of octave placement");
+        for(int i=1;i<c.count;++i)c.notes[i-1]=c.notes[i];--c.count;
+        check(chordName(c)==symbol,"root omission preserves harmonic identity");
+    }
+    check(chordName(named(0,1,{60,63,67}))=="C [1 b3 5]","nonstandard imported fields retain an exact interval description");
     for(int key=0;key<12;++key) for(int mode=0;mode<4;++mode) for(int complexity=0;complexity<3;++complexity)
     for(int floor:{48,60,72,84}) for(bool rootless:{false,true}) for(int spacing:{0,1}) {
         Session s; s.music.key=key; s.music.mode=Mode(mode); s.music.complexity=complexity;
