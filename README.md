@@ -1,50 +1,34 @@
-**Undertone â€” generative chords and pads**
+# Undertone
 
-Native software prototype v0.12.1 Â· November 1, 2026 Â· Owner: Mike
+A standalone synth that generates evolving chords and pads for bass practice, jams and electronic music. Choose a sound, generate a progression, and play along. Runs offline on Windows and macOS.
 
-A personal instrument that generates chords and pads for bass practice, jams with Elektron beats, and darker electronic composition. Windows and macOS preview downloads are available. The Mac universal package passed native Intel tests and binary architecture validation; ARM64 execution and interactive Mac audio/UI verification remain untested for this release.
+![Undertone Performance view with chord cards and sound controls](docs/images/undertone-performance.png)
 
-**Download the [v0.12.1 preview](https://github.com/michaelbuckner/undertone/releases/tag/v0.12.1):** [Windows x64 ZIP](https://github.com/michaelbuckner/undertone/releases/download/v0.12.1/Undertone-0.12.1-Windows-x64.zip) · [macOS universal ZIP](https://github.com/michaelbuckner/undertone/releases/download/v0.12.1/Undertone-0.12.1-macOS-universal.zip) · [Complete source](https://github.com/michaelbuckner/undertone/releases/download/v0.12.1/Undertone-0.12.1-source.zip) · [Checksums](https://github.com/michaelbuckner/undertone/releases/download/v0.12.1/SHA256SUMS.txt).
+## Download
 
-Extract the entire Windows ZIP and run `Undertone.exe` with its DLLs beside it. On Mac, extract the ZIP and open `Undertone.app` (macOS 14+, Intel or Apple silicon). These are unsigned previews; the Mac app is not Developer ID signed or notarized. ARM64 execution, interactive Mac audio/UI and physical Elektron timing remain unverified for this release. See the [Mac validation and packaging notes](docs/macos-release-0.12.1.md).
+**v0.12.1 preview**
 
-**License:** [AGPLv3](LICENSE), with [third-party notices](THIRD-PARTY-NOTICES.md) and [corresponding-source/build instructions](docs/source-and-license.md).
+- [Windows x64](https://github.com/michaelbuckner/undertone/releases/download/v0.12.1/Undertone-0.12.1-Windows-x64.zip)
+- [macOS 14+ — Intel and Apple silicon](https://github.com/michaelbuckner/undertone/releases/download/v0.12.1/Undertone-0.12.1-macOS-universal.zip)
 
-![Undertone v0.12.1 Performance view showing chord cards, scene controls, and layer levels](docs/images/undertone-performance.png)
+[Release notes, complete source and checksums](https://github.com/michaelbuckner/undertone/releases/tag/v0.12.1).
 
-- [Quick start](docs/quick-start.md): run the app, generate harmony, save a session, and connect MIDI clock.
-- [Sound and evolution changes](docs/sound-design-0.2.md): independent Ladder, DCO and FM tones, audible Evolve, legacy session migration, and architecture references.
-- [Arrangement and phone auditions](docs/arrangement-0.3.md): recurring melodies, broken chords, sixteen-bar form, drift and filtered echo.
-- [Optional percussion](docs/percussion-0.4.md): a steady pulse with seeded offbeats and short glitch accents, plus new MP3 auditions.
-- [Melody phrasing and voices](docs/melody-0.5.md): harmony lookahead, controlled resolutions and four independent melody timbres.
-- [Studies: composition and texture](docs/composition-0.6.md): Still/Uneasy generation, sparse gestures, 32-bar development, Felt object and Bowed wire voices.
-- [Chord edits and automatic cycles](docs/cycles-0.7.md): per-slot Swap and Rest / Restore, with separate bar-synced composition and motif changes.
-- [Performance, phrasing and capture](docs/performance-0.8.md): Hold/Vary/New, A/B scenes, deliberate swaps, compact controls, louder percussion, snapshots, WAV recording and MIDI export.
-- [Studio interface](docs/ui-0.9.md): visual direction, native control polish and remaining product-design work.
-- [Focused Sound editor](docs/sound-editor-0.10.md): six compact sections, engine-aware controls and shared Performance settings.
-- [Preset and session library](docs/library-0.11.md): search, saved variations, recent files and edited-state protection.
-- [Display scaling and refreshed presets](docs/presets-and-scale-0.12.md): automatic interface size, Lyrical/Pocket arrangements and a revised starting bank.
-- [Build status](docs/build-status.md): verified behavior, known limitations, and the remaining PRD release gates.
-- [Third-party dependency](docs/third-party.md): pinned JUCE source and distribution notes.
-- [Apple silicon verification](docs/mac-verification.md): run the prepared Mac build and collect actual test/launch evidence.
+## Get started
 
-- [Software PRD](docs/software-prd.md): Windows/macOS standalone MVP, musical behavior, interface, integration, and release criteria.
-- [Hardware PRD](docs/hardware-prd.md): equivalent desktop instrument, physical requirements, build approaches, and learning milestones.
+1. Extract the ZIP. Open `Undertone.exe` on Windows, keeping the included DLLs beside it, or `Undertone.app` on Mac.
+2. Open **Audio settings** and choose your speakers or headphones. Start with the volume low.
+3. Choose a starting sound, key and mode. Press **Generate**, then **Play / restart**.
 
-Confirmed requirements: software first; Windows and Mac support; generative chords/pads; room for a live bass player; integration with Digitone II, Digitakt I, and Syntakt. Musical interests include ambient, neo-soul, funk, and the slower dark ambient side of later Nine Inch Nails. Apple silicon is the available Mac test target; interactive Mac verification is still pending.
+Lock chords you like, enable **Evolve** for gradual changes, and save your session to return to it later. See the [playing guide](docs/quick-start.md) for more.
 
-The musical core is plain C++17. The native application uses JUCE 9.0.4, pinned to commit `3fb5cbc0340758596dac39f7c8de47d562b4896e`. No network service is used at runtime. Hardware component selection and spending remain open for a later discussion.
+## About this preview
 
-**Repository.** [michaelbuckner/undertone](https://github.com/michaelbuckner/undertone) is the public source repository. `main` tracks the current prototype. Generated builds, exports, local settings and the vendored dependency checkout are excluded.
+Windows is unsigned; the Mac app has no Developer ID signing or notarization. Mac Intel tests passed, but Apple silicon execution, interactive Mac audio/UI and physical MIDI timing remain unverified for this release. [Validation details](docs/macos-release-0.12.1.md).
 
-**Build on Windows.** Install Python 3.10+, CMake 3.22+ and Visual Studio C++ Build Tools with a Windows SDK. Run `./scripts/build-windows.ps1` in PowerShell. The executable is `build/Undertone_artefacts/Release/Undertone.exe`. The script discovers the Visual Studio-bundled CMake when it is not on PATH. This is a native Windows build, not WSL.
+## Learn more
 
-**Build on macOS.** Install Xcode Command Line Tools, Python 3.10+ and CMake 3.22+, then run `bash scripts/build-macos.sh`. This requests a universal Intel/Apple silicon application with macOS 14 as its minimum target. The release universal build and all 13 native Intel test suites passed. ARM64 execution and interactive testing on a physical Mac remain unverified for this release. The output path is `build-macos/Undertone_artefacts/Release/Undertone.app`.
+- [Documentation and feature guides](docs/README.md)
+- [Build from source and source map](docs/development.md)
+- [Source, licensing and dependencies](docs/source-and-license.md)
 
-Both builds fetch the pinned JUCE commit when `vendor/JUCE` is absent. An initial internet connection is needed to obtain this build dependency; the finished application runs offline.
-
-**Build the portable engine only.** Run `cmake -S . -B build-core -DUNDERTONE_APP=OFF`, then `cmake --build build-core --config Release` and `ctest --test-dir build-core -C Release --output-on-failure`. This does not need JUCE. `render_demo` creates a WAV from the exact synth engine used by the app; arguments are output path, preset index 0â€“7, duration in seconds, optional tone index 0â€“8, and optional Evolve override 0/1 (sets Variation to 0.65 and interval to two bars). `soak_test 120 1` accelerates two minutes of dense chords on the Ladder engine; model IDs 0â€“3 select Warm/Ladder/DCO/FM.
-
-**Package.** After a full Release build, run `cmake --install build --config Release --prefix dist/Undertone --component UndertoneRuntime`. Windows packaging includes the required Microsoft runtime DLLs. The packages are unsigned previews; no installer, Developer ID signing, or notarization is configured. The GitHub Actions workflow builds and tests Windows/macOS and produces runtime ZIPs plus the complete corresponding source. Verified archives are published on the [Releases page](https://github.com/michaelbuckner/undertone/releases). Check the [Actions page](https://github.com/michaelbuckner/undertone/actions) for the current result; CI does not replace physical audio/MIDI verification.
-
-**Source map.** `src/core/Music.*` contains scales, seeded generation, and voicing. `src/core/Engine.*` owns transport, queued edits, 16 voices, and effects. `src/core/MidiTimeline.*` maps incoming timestamps to audio samples through a bounded queue. `src/app` contains the native UI, audio/MIDI device adapters, and versioned session files. `tests` exercises the core, serialization, MIDI timing, rendering, and stress processing. No hardware-specific code is present.
+Open source under [GNU AGPLv3](LICENSE), without warranty. [Third-party notices](THIRD-PARTY-NOTICES.md).
