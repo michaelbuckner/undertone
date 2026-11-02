@@ -7,7 +7,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest, macos-latest]
+        # Pin the supported Apple silicon image instead of the moving latest pool.
+        # Keep native ARM64 and Rosetta Intel execution for the universal release.
+        os: [windows-latest, macos-15]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
