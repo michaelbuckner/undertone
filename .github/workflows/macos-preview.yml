@@ -30,7 +30,24 @@ jobs:
       - name: Install runtime component
         run: cmake --install build --config Release --prefix dist/Undertone --component UndertoneRuntime
       - name: Verify universal architectures and package runtime
-        run: python scripts/package-release.py --platform macOS-universal --stage dist/Undertone --output dist --juce-source build/_deps/juce-src
+        # Apply only the lipo argument-order correction to the tagged packager in
+        # memory. The built source, clean checkout and manifest revision stay exact.
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import sys
+          script = Path('scripts/package-release.py').resolve()
+          code = script.read_text()
+          old = '["lipo", "-verify_arch", "arm64", "x86_64", str(binary)]'
+          new = '["lipo", str(binary), "-verify_arch", "arm64", "x86_64"]'
+          if old in code:
+              assert code.count(old) == 1
+              code = code.replace(old, new)
+          else:
+              assert new in code, 'Unexpected packager: review the architecture check'
+          sys.argv = [str(script), '--platform', 'macOS-universal', '--stage', 'dist/Undertone', '--output', 'dist', '--juce-source', 'build/_deps/juce-src']
+          exec(compile(code, str(script), 'exec'), {'__name__': '__main__', '__file__': str(script)})
+          PY
       - uses: actions/upload-artifact@v4
         with:
           name: Undertone-macOS-fallback

@@ -61,7 +61,7 @@ def main():
     if not binary.is_file():
         raise RuntimeError("Missing app executable")
     if args.platform == "macOS-universal":
-        subprocess.run(["lipo", "-verify_arch", "arm64", "x86_64", str(binary)], check=True)
+        subprocess.run(["lipo", str(binary), "-verify_arch", "arm64", "x86_64"], check=True)
         if not os.access(binary, os.X_OK):
             raise RuntimeError("Mac executable permission is missing")
     source_name = f"Undertone-{version}-source.zip"

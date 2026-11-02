@@ -20,7 +20,7 @@ app="$root/build-macos/Undertone_artefacts/Release/Undertone.app"
 binary="$app/Contents/MacOS/Undertone"
 printf 'Built architectures: '
 lipo -archs "$binary"
-lipo -verify_arch arm64 x86_64 "$binary"
+lipo "$binary" -verify_arch arm64 x86_64
 
 # Keep verification recovery/audio settings separate from normal user sessions.
 export UNDERTONE_DATA_DIR="$report/test-user-data"
