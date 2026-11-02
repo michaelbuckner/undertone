@@ -61,7 +61,7 @@ if [[ "$(uname -m)" == arm64 ]] && arch -x86_64 /usr/bin/true 2>/dev/null; then
 else
   printf 'Intel execution not checked. No Rosetta installation was attempted.\n'
 fi
-cmake --install "$root/build-macos" --prefix "$root/dist/Undertone-macOS"
+cmake --install "$root/build-macos" --prefix "$root/dist/Undertone-macOS" --component UndertoneRuntime
 ditto -c -k --sequesterRsrc --keepParent "$root/dist/Undertone-macOS" "$root/dist/Undertone-macos-universal.zip"
 printf '\nNative build/tests and smoke launch completed.\nThis does not certify listening quality, real-time stability, or Elektron timing.\n'
 printf 'Results: %s\nPackage: %s\n' "$report" "$root/dist/Undertone-macos-universal.zip"

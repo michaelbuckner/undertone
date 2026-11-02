@@ -1,7 +1,11 @@
-**Dependency record**
+**Dependency and distribution record**
 
-The desktop app uses [JUCE](https://github.com/juce-framework/JUCE), release 9.0.4, commit `3fb5cbc0340758596dac39f7c8de47d562b4896e`. CMake fetches that exact commit if a local development checkout is absent. The checked-out source used for the initial Windows build matches that commit.
+Undertone uses [JUCE 9.0.4](https://github.com/juce-framework/JUCE), pinned to commit `3fb5cbc0340758596dac39f7c8de47d562b4896e`. CMake fetches that revision when `vendor/JUCE` is absent.
 
-JUCE's bundled `LICENSE.md` describes its AGPLv3/commercial licensing options. The package includes that file under `licenses/JUCE-LICENSE.md`. This is a local development prototype; no commercial license purchase, public release, or choice of license for Mike's original source has been made. Settle the project's distribution/license choice before publishing binaries or source. See the [upstream license file](https://github.com/juce-framework/JUCE/blob/3fb5cbc0340758596dac39f7c8de47d562b4896e/LICENSE.md).
+Undertone is released under AGPL-3.0-only, and this distribution uses JUCE's AGPLv3 option. See the full [project license](../LICENSE), [copyright notice](../COPYRIGHT), and [third-party notices](../THIRD-PARTY-NOTICES.md). Dependencies keep their own license and copyright notices.
 
-The portable harmony and synthesis modules do not depend on JUCE. Factory presets are programmatically defined in this repository; no downloaded samples, recordings, or sound packs are included.
+Runtime packages include JUCE's license, SPDX dependency inventory, and a collection of original upstream notices. Windows packages also include release Microsoft Visual C++ runtime DLLs under their applicable Microsoft terms. The runtime component excludes JUCE development headers, CMake exports and tools.
+
+The release's explicitly named source ZIP includes the exact Undertone revision and complete pinned JUCE sources with build scripts and notices. See [source and rebuilding](source-and-license.md). GitHub's automatic source downloads do not bundle JUCE.
+
+The portable harmony and synthesis modules do not depend on JUCE. Factory presets are programmatically defined; no downloaded samples, recordings or sound packs are included in the app.

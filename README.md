@@ -1,8 +1,14 @@
-**Undertone — generative chords and pads**
+**Undertone â€” generative chords and pads**
 
-Native software prototype v0.12.1 · November 1, 2026 · Owner: Mike
+Native software prototype v0.12.1 Â· November 1, 2026 Â· Owner: Mike
 
 A personal instrument that generates chords and pads for bass practice, jams with Elektron beats, and darker electronic composition. The first Windows application is implemented and locally tested. macOS uses the same C++/JUCE source. The initial GitHub CI run built its universal package and passed native and Rosetta tests; interactive Mac audio/UI verification is still pending.
+
+**Download the [v0.12.1 preview](https://github.com/michaelbuckner/undertone/releases/tag/v0.12.1):** [Windows x64 ZIP](https://github.com/michaelbuckner/undertone/releases/download/v0.12.1/Undertone-0.12.1-Windows-x64.zip) · [macOS universal ZIP](https://github.com/michaelbuckner/undertone/releases/download/v0.12.1/Undertone-0.12.1-macOS-universal.zip) · [Complete source](https://github.com/michaelbuckner/undertone/releases/download/v0.12.1/Undertone-0.12.1-source.zip) · [Checksums](https://github.com/michaelbuckner/undertone/releases/download/v0.12.1/SHA256SUMS.txt).
+
+Extract the entire Windows ZIP and run `Undertone.exe` with its DLLs beside it. On Mac, extract the ZIP and open `Undertone.app` (macOS 14+, Intel or Apple silicon). These are unsigned preview builds; the Mac app is not Developer ID signed or notarized. Interactive Mac audio/UI and physical Elektron timing remain unverified.
+
+**License:** [AGPLv3](LICENSE), with [third-party notices](THIRD-PARTY-NOTICES.md) and [corresponding-source/build instructions](docs/source-and-license.md).
 
 ![Undertone v0.12.1 Performance view showing chord cards, scene controls, and layer levels](docs/images/undertone-performance.png)
 
@@ -29,16 +35,16 @@ Confirmed requirements: software first; Windows and Mac support; generative chor
 
 The musical core is plain C++17. The native application uses JUCE 9.0.4, pinned to commit `3fb5cbc0340758596dac39f7c8de47d562b4896e`. No network service is used at runtime. Hardware component selection and spending remain open for a later discussion.
 
-**Repository.** [michaelbuckner/undertone](https://github.com/michaelbuckner/undertone) is the private source repository. `main` tracks the current prototype. Generated builds, exports, local settings and the vendored dependency checkout are excluded.
+**Repository.** [michaelbuckner/undertone](https://github.com/michaelbuckner/undertone) is the public source repository. `main` tracks the current prototype. Generated builds, exports, local settings and the vendored dependency checkout are excluded.
 
-**Build on Windows.** Install CMake 3.22+ and Visual Studio C++ Build Tools with a Windows SDK. Run `./scripts/build-windows.ps1` in PowerShell. The executable is `build/Undertone_artefacts/Release/Undertone.exe`. The script discovers the Visual Studio-bundled CMake when it is not on PATH. This is a native Windows build, not WSL.
+**Build on Windows.** Install Python 3.10+, CMake 3.22+ and Visual Studio C++ Build Tools with a Windows SDK. Run `./scripts/build-windows.ps1` in PowerShell. The executable is `build/Undertone_artefacts/Release/Undertone.exe`. The script discovers the Visual Studio-bundled CMake when it is not on PATH. This is a native Windows build, not WSL.
 
-**Build on macOS.** Install Xcode Command Line Tools and CMake 3.22+, then run `bash scripts/build-macos.sh`. This requests a universal Intel/Apple silicon application with macOS 14 as its minimum target. The script has not yet been run on a Mac. The output path is `build-macos/Undertone_artefacts/Release/Undertone.app`.
+**Build on macOS.** Install Xcode Command Line Tools, Python 3.10+ and CMake 3.22+, then run `bash scripts/build-macos.sh`. This requests a universal Intel/Apple silicon application with macOS 14 as its minimum target. The universal CI build and native/Rosetta tests pass; interactive testing on a physical Mac remains pending. The output path is `build-macos/Undertone_artefacts/Release/Undertone.app`.
 
 Both builds fetch the pinned JUCE commit when `vendor/JUCE` is absent. An initial internet connection is needed to obtain this build dependency; the finished application runs offline.
 
-**Build the portable engine only.** Run `cmake -S . -B build-core -DUNDERTONE_APP=OFF`, then `cmake --build build-core --config Release` and `ctest --test-dir build-core -C Release --output-on-failure`. This does not need JUCE. `render_demo` creates a WAV from the exact synth engine used by the app; arguments are output path, preset index 0–7, duration in seconds, optional tone index 0–8, and optional Evolve override 0/1 (sets Variation to 0.65 and interval to two bars). `soak_test 120 1` accelerates two minutes of dense chords on the Ladder engine; model IDs 0–3 select Warm/Ladder/DCO/FM.
+**Build the portable engine only.** Run `cmake -S . -B build-core -DUNDERTONE_APP=OFF`, then `cmake --build build-core --config Release` and `ctest --test-dir build-core -C Release --output-on-failure`. This does not need JUCE. `render_demo` creates a WAV from the exact synth engine used by the app; arguments are output path, preset index 0â€“7, duration in seconds, optional tone index 0â€“8, and optional Evolve override 0/1 (sets Variation to 0.65 and interval to two bars). `soak_test 120 1` accelerates two minutes of dense chords on the Ladder engine; model IDs 0â€“3 select Warm/Ladder/DCO/FM.
 
-**Package.** After a full Release build, run `cmake --install build --config Release --prefix dist/Undertone`. Windows packaging includes the required Microsoft runtime DLLs. The package is an unsigned local prototype; no installer, signing, or notarization is configured yet. The GitHub Actions workflow builds Windows/macOS and uploads test-build packages. Check the [Actions page](https://github.com/michaelbuckner/undertone/actions) for the current result; CI does not replace physical audio/MIDI verification.
+**Package.** After a full Release build, run `cmake --install build --config Release --prefix dist/Undertone --component UndertoneRuntime`. Windows packaging includes the required Microsoft runtime DLLs. The packages are unsigned previews; no installer, Developer ID signing, or notarization is configured. The GitHub Actions workflow builds and tests Windows/macOS and produces runtime ZIPs plus the complete corresponding source. Verified archives are published on the [Releases page](https://github.com/michaelbuckner/undertone/releases). Check the [Actions page](https://github.com/michaelbuckner/undertone/actions) for the current result; CI does not replace physical audio/MIDI verification.
 
 **Source map.** `src/core/Music.*` contains scales, seeded generation, and voicing. `src/core/Engine.*` owns transport, queued edits, 16 voices, and effects. `src/core/MidiTimeline.*` maps incoming timestamps to audio samples through a bounded queue. `src/app` contains the native UI, audio/MIDI device adapters, and versioned session files. `tests` exercises the core, serialization, MIDI timing, rendering, and stress processing. No hardware-specific code is present.

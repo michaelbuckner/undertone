@@ -11,6 +11,9 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
       - name: Configure Windows
         if: runner.os == 'Windows'
         run: cmake -S . -B build -A x64
@@ -31,20 +34,31 @@ jobs:
           arch -x86_64 build/melody_tests
           arch -x86_64 build/composition_tests
           arch -x86_64 build/cycle_tests
+          arch -x86_64 build/preset_tests
           arch -x86_64 build/refinement_tests
           arch -x86_64 build/export_tests_artefacts/Release/export_tests
           arch -x86_64 build/midi_tests
           arch -x86_64 build/session_tests_artefacts/Release/session_tests
           arch -x86_64 build/library_tests_artefacts/Release/library_tests
       - name: Package
-        run: cmake --install build --config Release --prefix dist/Undertone
-      - name: Archive macOS with executable permissions
-        if: runner.os == 'macOS'
-        run: ditto -c -k --sequesterRsrc --keepParent dist/Undertone dist/Undertone-macos-universal.zip
-      - name: Archive Windows
+        run: cmake --install build --config Release --prefix dist/Undertone --component UndertoneRuntime
+      - name: Smoke-test packaged Windows app
         if: runner.os == 'Windows'
-        run: Compress-Archive -LiteralPath dist/Undertone -DestinationPath dist/Undertone-windows-x64.zip
+        run: |
+          $env:UNDERTONE_DATA_DIR = Join-Path $PWD 'build/release-smoke-data'
+          $output = Join-Path $PWD 'build/release-smoke'
+          $app = Start-Process -FilePath (Join-Path $PWD 'dist/Undertone/Undertone.exe') -ArgumentList '--smoke', ('"' + $output + '"') -WindowStyle Hidden -PassThru -Wait
+          if ($app.ExitCode -ne 0) { throw 'Packaged app exited with an error' }
+          if (!(Test-Path (Join-Path $output 'window.png'))) { throw 'App screenshot missing' }
+          if (!(Select-String -Path (Join-Path $output 'smoke.txt') -SimpleMatch 'Sound navigation preserves session and sends no engine commands: PASS')) { throw 'App smoke check failed' }
+      - name: Package macOS runtime and complete corresponding source
+        if: runner.os == 'macOS'
+        run: python scripts/package-release.py --platform macOS-universal --stage dist/Undertone --output dist --juce-source build/_deps/juce-src --include-source
+      - name: Package Windows runtime
+        if: runner.os == 'Windows'
+        run: python scripts/package-release.py --platform Windows-x64 --stage dist/Undertone --output dist --juce-source build/_deps/juce-src
       - uses: actions/upload-artifact@v4
         with:
           name: Undertone-${{ runner.os }}
           path: dist/*.zip
+          if-no-files-found: error
