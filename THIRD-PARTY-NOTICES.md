@@ -10,6 +10,8 @@ Binary packages include `licenses/JUCE-LICENSE.md`, the upstream inventory `lice
 
 JUCE incorporates third-party code with its own terms, including MIT, BSD, Apache 2.0, ISC, zlib, libpng and IJG notices. Those copyrights and terms are retained; the project license does not replace them. The corresponding source archive includes the complete pinned JUCE source tree and its notices. Optional AAX and ASIO source is included under its available GPLv3 option; Undertone does not build an AAX plug-in or enable ASIO.
 
+This software is based in part on the work of the Independent JPEG Group.
+
 ## Windows runtime libraries
 
 Windows packages include the release Microsoft Visual C++ runtime DLLs selected by CMake's `InstallRequiredSystemLibraries` from the build runner's Visual Studio toolchain. These Microsoft system runtime components are proprietary distributable code, not Undertone source and not relicensed under AGPL. Their filenames and SHA-256 hashes appear in `BUILD-MANIFEST.json`.
