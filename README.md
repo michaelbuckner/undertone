@@ -2,11 +2,11 @@
 
 Native software prototype v0.12.1 Â· November 1, 2026 Â· Owner: Mike
 
-A personal instrument that generates chords and pads for bass practice, jams with Elektron beats, and darker electronic composition. The first Windows application is implemented and locally tested. macOS uses the same C++/JUCE source. The initial GitHub CI run built its universal package and passed native and Rosetta tests; interactive Mac audio/UI verification is still pending.
+A personal instrument that generates chords and pads for bass practice, jams with Elektron beats, and darker electronic composition. The Windows preview is built and tested. macOS uses the same C++/JUCE source; its release package and interactive Mac audio/UI verification are pending.
 
-**Download the [v0.12.1 preview](https://github.com/michaelbuckner/undertone/releases/tag/v0.12.1):** [Windows x64 ZIP](https://github.com/michaelbuckner/undertone/releases/download/v0.12.1/Undertone-0.12.1-Windows-x64.zip) · [macOS universal ZIP](https://github.com/michaelbuckner/undertone/releases/download/v0.12.1/Undertone-0.12.1-macOS-universal.zip) · [Complete source](https://github.com/michaelbuckner/undertone/releases/download/v0.12.1/Undertone-0.12.1-source.zip) · [Checksums](https://github.com/michaelbuckner/undertone/releases/download/v0.12.1/SHA256SUMS.txt).
+**Download the [v0.12.1 preview](https://github.com/michaelbuckner/undertone/releases/tag/v0.12.1):** [Windows x64 ZIP](https://github.com/michaelbuckner/undertone/releases/download/v0.12.1/Undertone-0.12.1-Windows-x64.zip) · [Complete source](https://github.com/michaelbuckner/undertone/releases/download/v0.12.1/Undertone-0.12.1-source.zip) · [Checksums](https://github.com/michaelbuckner/undertone/releases/download/v0.12.1/SHA256SUMS.txt). **Mac download pending:** hosted Apple silicon runner capacity has delayed release validation.
 
-Extract the entire Windows ZIP and run `Undertone.exe` with its DLLs beside it. On Mac, extract the ZIP and open `Undertone.app` (macOS 14+, Intel or Apple silicon). These are unsigned preview builds; the Mac app is not Developer ID signed or notarized. Interactive Mac audio/UI and physical Elektron timing remain unverified.
+Extract the entire Windows ZIP and run `Undertone.exe` with its DLLs beside it. This preview is unsigned. The planned Mac package targets macOS 14+, Intel and Apple silicon, without Developer ID signing or notarization. Interactive Mac audio/UI and physical Elektron timing remain unverified.
 
 **License:** [AGPLv3](LICENSE), with [third-party notices](THIRD-PARTY-NOTICES.md) and [corresponding-source/build instructions](docs/source-and-license.md).
 
@@ -39,7 +39,7 @@ The musical core is plain C++17. The native application uses JUCE 9.0.4, pinned 
 
 **Build on Windows.** Install Python 3.10+, CMake 3.22+ and Visual Studio C++ Build Tools with a Windows SDK. Run `./scripts/build-windows.ps1` in PowerShell. The executable is `build/Undertone_artefacts/Release/Undertone.exe`. The script discovers the Visual Studio-bundled CMake when it is not on PATH. This is a native Windows build, not WSL.
 
-**Build on macOS.** Install Xcode Command Line Tools, Python 3.10+ and CMake 3.22+, then run `bash scripts/build-macos.sh`. This requests a universal Intel/Apple silicon application with macOS 14 as its minimum target. The universal CI build and native/Rosetta tests pass; interactive testing on a physical Mac remains pending. The output path is `build-macos/Undertone_artefacts/Release/Undertone.app`.
+**Build on macOS.** Install Xcode Command Line Tools, Python 3.10+ and CMake 3.22+, then run `bash scripts/build-macos.sh`. This requests a universal Intel/Apple silicon application with macOS 14 as its minimum target. The current Mac release validation is pending; earlier CI builds passed native/Rosetta tests. An Intel runner fallback can test Intel execution and inspect both architectures, but cannot validate ARM64 execution. Interactive testing on a physical Mac remains pending. The output path is `build-macos/Undertone_artefacts/Release/Undertone.app`.
 
 Both builds fetch the pinned JUCE commit when `vendor/JUCE` is absent. An initial internet connection is needed to obtain this build dependency; the finished application runs offline.
 

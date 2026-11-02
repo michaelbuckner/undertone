@@ -1,0 +1,38 @@
+name: macOS preview fallback
+on:
+  workflow_dispatch:
+    inputs:
+      source_ref:
+        description: Exact release source commit
+        required: true
+        default: 2e982e204227d9f4c4415ec379fefea0be5a0f91
+permissions:
+  contents: read
+jobs:
+  universal:
+    # Standard public-repository runner; no paid larger-runner label.
+    runs-on: macos-15-intel
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.source_ref }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Configure macOS universal with macOS 14 minimum
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release '-DCMAKE_OSX_ARCHITECTURES=arm64;x86_64' -DCMAKE_OSX_DEPLOYMENT_TARGET=14.0
+      - name: Build both architectures
+        run: cmake --build build --config Release --parallel 3
+      - name: Test native Intel architecture
+        run: ctest --test-dir build -C Release --output-on-failure
+      - name: Record ARM64 execution limitation
+        run: echo 'This Intel host builds and inspects ARM64 code but cannot execute it. Apple silicon execution validation remains pending.' >> "$GITHUB_STEP_SUMMARY"
+      - name: Install runtime component
+        run: cmake --install build --config Release --prefix dist/Undertone --component UndertoneRuntime
+      - name: Verify universal architectures and package runtime
+        run: python scripts/package-release.py --platform macOS-universal --stage dist/Undertone --output dist --juce-source build/_deps/juce-src
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Undertone-macOS-fallback
+          path: dist/*.zip
+          if-no-files-found: error
